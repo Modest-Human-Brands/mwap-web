@@ -1,11 +1,15 @@
 import { fileURLToPath, URL } from 'node:url'
 
+import { loadEnv } from 'vite-plus'
 import { defineConfig, lazyPlugins } from 'vite-plus'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import tailwindcss from '@tailwindcss/vite'
 import Icons from 'unplugin-icons/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+
+// The config runs before Vite exposes .env, so read VITE_API_PROXY from it explicitly.
+const env = loadEnv(process.env.NODE_ENV ?? 'development', process.cwd(), 'VITE_')
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -147,7 +151,7 @@ export default defineConfig({
     // Same-origin in dev so the browser needs no CORS; set VITE_API_PROXY to the MWap service.
     proxy: {
       '/api': {
-        target: process.env.VITE_API_PROXY ?? 'http://localhost:3000',
+        target: env.VITE_API_PROXY ?? process.env.VITE_API_PROXY ?? 'http://localhost:3000',
         changeOrigin: true,
       },
     },

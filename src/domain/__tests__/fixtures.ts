@@ -17,27 +17,35 @@ export const brand: Site['brand'] = {
 export const site: Site = {
   slug: 'northlight-studio',
   orgId: 'default',
-  templateId: 'studio-v1',
+  templateId: 'contact-sheet',
   brand,
   data: {
     seo: { ogImage: 'https://example.com/og.png' },
     pages: {
       home: {
         title: 'Home',
-        hero: { enabled: true, title: 'Stories', subtitle: 'A studio', cta: 'x' },
+        cover: { enabled: true, title: 'Stories', tagline: 'A studio', label: 'Cover' },
+        compCard: {
+          enabled: true,
+          title: 'Comp card',
+          stats: [{ value: '120K', label: 'Followers' }],
+          measurements: [
+            { label: 'Height', value: '178 cm' },
+            { label: 'Waist', value: '60 cm' },
+          ],
+        },
       },
-      about: { title: 'About' },
     },
   },
   domains: ['northlight.example.test'],
 }
 
 export const template: Template = {
-  id: 'studio-v1',
-  label: 'Studio',
-  shortLabel: 'Studio',
-  category: 'Studios',
+  id: 'contact-sheet',
+  label: 'Contact Sheet',
+  shortLabel: 'Contact Sheet',
+  category: 'Portfolios',
   description: 'Studio template',
   schema: {},
-  sample: { brand, data: site.data },
+  sample: site.data,
 }

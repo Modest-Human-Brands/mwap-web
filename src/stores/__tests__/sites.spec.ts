@@ -11,7 +11,7 @@ const rows: [string, string, SiteCard['status']][] = [
 const cards: SiteCard[] = rows.map(([slug, name, status], i) => ({
   slug,
   orgId: 'default',
-  templateId: 'studio-v1',
+  templateId: 'contact-sheet',
   name,
   updatedAt: '2026-10-01T00:00:00.000Z',
   index: i + 1,

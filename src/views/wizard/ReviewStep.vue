@@ -67,7 +67,9 @@ async function publish() {
         title="Page content"
         :rows="[
           ['Headline', d.headline],
-          ['Short bio', d.bio],
+          ['Tagline', d.bio],
+          ['Measurements', d.measurements.map((m) => `${m.label} ${m.value}`).join(' · ')],
+          ['Stats', d.stats.map((s) => `${s.value} ${s.label}`).join(' · ') || 'None'],
         ]"
       />
     </div>
@@ -91,7 +93,7 @@ async function publish() {
         :address="siteAddress(d.slug)"
         :template-id="tpl.id"
         :brand="buildBrand(tpl, d)"
-        :data="buildData(d)"
+        :data="buildData(tpl, d)"
         :pages="templatePages(tpl)"
       />
     </template>

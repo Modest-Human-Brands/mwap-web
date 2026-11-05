@@ -10,14 +10,7 @@ export interface SiteMeta {
 
 const STORAGE_KEY = 'mwap:mock:site-meta'
 
-const seeded: Record<string, SiteMeta> = {
-  'northlight-studio': {
-    status: 'published',
-    description: 'Brand site for the Northlight film and photo studio.',
-    pages: 5,
-    collaborators: [{ initial: 'R' }, { initial: 'A' }],
-  },
-}
+const seeded: Record<string, SiteMeta> = {}
 
 function load(): Record<string, SiteMeta> {
   try {
@@ -36,7 +29,8 @@ function fallback(slug: string, name: string): SiteMeta {
   return {
     status,
     description: `Site for ${name}.`,
-    pages: (hash % 5) + 1,
+    // The service lists sites without their pages; its one template is single-page.
+    pages: 1,
     collaborators: [{ initial: 'R' }, { initial: 'A' }],
   }
 }

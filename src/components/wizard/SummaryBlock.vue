@@ -10,7 +10,7 @@ defineProps<{ title: string; rows: [label: string, value: string][] }>()
     >
       <template v-for="[label, value] in rows" :key="label">
         <dt class="text-text-2">{{ label }}</dt>
-        <dd class="min-w-0 break-words">{{ value }}</dd>
+        <dd class="min-w-0 [overflow-wrap:anywhere]">{{ value }}</dd>
       </template>
     </dl>
   </section>

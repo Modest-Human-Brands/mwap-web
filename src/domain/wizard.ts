@@ -7,9 +7,27 @@ export interface SiteDetails {
   logoUrl: string
   accent: string
   fontFamily: string
+  /** Cover title (`pages.home.cover.title`). */
   headline: string
+  /** Cover tagline (`pages.home.cover.tagline`). */
   bio: string
+  /** Comp card stats, at most 3 (`pages.home.compCard.stats`). */
+  stats: Stat[]
+  /** Comp card measurements, 1 to 10 (`pages.home.compCard.measurements`). */
+  measurements: Measurement[]
 }
+
+export interface Stat {
+  value: string
+  label: string
+}
+export interface Measurement {
+  label: string
+  value: string
+}
+
+export const MAX_STATS = 3
+export const MAX_MEASUREMENTS = 10
 
 export const SLUG_PATTERN = /^[a-z0-9-]+$/
 
@@ -31,38 +49,93 @@ export function siteAddress(slug: string) {
 type Rec = Record<string, unknown>
 const rec = (v: unknown): Rec => (v && typeof v === 'object' ? (v as Rec) : {})
 
-/** Details form defaults, read from the template sample (the service's own placeholder content). */
-export function defaultsFromTemplate(template: Template): SiteDetails {
-  const hero = rec(rec(rec(template.sample.data.pages).home).hero)
-  const name = template.sample.brand.name
+const text = (v: unknown) => (typeof v === 'string' ? v : '')
+const list = <T extends Rec>(v: unknown, keys: (keyof T & string)[]): T[] =>
+  Array.isArray(v)
+    ? v.map((item) => Object.fromEntries(keys.map((k) => [k, text(rec(item)[k])])) as T)
+    : []
+
+/** The editable content of a `contact-sheet` payload: cover text plus the comp card lists. */
+function readContent(data: SiteData) {
+  const home = rec(rec(data.pages).home)
+  const cover = rec(home.cover)
+  const compCard = rec(home.compCard)
   return {
-    name,
-    slug: slugify(name),
-    logoUrl: template.sample.brand.logoUrl,
-    accent: template.sample.brand.colors.accent,
-    fontFamily: template.sample.brand.fontFamily,
-    headline: typeof hero.title === 'string' ? hero.title : '',
-    bio: typeof hero.subtitle === 'string' ? hero.subtitle : '',
+    headline: text(cover.title),
+    bio: text(cover.tagline),
+    stats: list<Rec & Stat>(compCard.stats, ['value', 'label']),
+    measurements: list<Rec & Measurement>(compCard.measurements, ['label', 'value']),
   }
 }
 
-/** Page keys of the template (home, projects, about…), for the preview rail. */
-export const templatePages = (template: Template) => Object.keys(rec(template.sample.data.pages))
+/** The edited content laid over a payload; everything else in it is kept as is. */
+function writeContent(data: SiteData, d: SiteDetails): SiteData {
+  const pages = rec(data.pages)
+  const home = rec(pages.home)
+  const compCard = rec(home.compCard)
+  return {
+    ...data,
+    pages: {
+      ...pages,
+      home: {
+        ...home,
+        cover: { ...rec(home.cover), title: d.headline, tagline: d.bio },
+        compCard: {
+          ...compCard,
+          stats: d.stats.map((s) => ({ ...s })),
+          measurements: d.measurements.map((m) => ({ ...m })),
+        },
+      },
+    },
+  }
+}
 
-export function buildBrand(template: Template, d: SiteDetails): Brand {
-  const { brand } = template.sample
+/** The service has no brand sample, so new sites start from this neutral one. */
+export const DEFAULT_BRAND: Brand = {
+  name: '',
+  logoUrl: 'https://api.iconify.design/lucide/globe.svg?color=%236C3BFF&width=64&height=64',
+  faviconUrl: 'https://api.iconify.design/lucide/globe.svg?color=%236C3BFF',
+  fontFamily: 'Geist',
+  colors: {
+    primary: '#6C3BFF',
+    secondary: '#98989F',
+    accent: '#6C3BFF',
+    background: '#0C0912',
+    text: '#F8FAFC',
+  },
+}
+
+/** Details form defaults, read from the template sample (the service's own placeholder content). */
+export function defaultsFromTemplate(template: Template): SiteDetails {
+  const brand = DEFAULT_BRAND
+  return {
+    name: brand.name,
+    slug: slugify(brand.name),
+    logoUrl: brand.logoUrl,
+    accent: brand.colors.accent,
+    fontFamily: brand.fontFamily,
+    ...readContent(template.sample),
+  }
+}
+
+/** Page keys of the template (home…), for the preview rail. */
+export const templatePages = (template: Template) => Object.keys(rec(template.sample.pages))
+
+export function buildBrand(_template: Template, d: SiteDetails): Brand {
+  const brand = DEFAULT_BRAND
   return {
     ...brand,
-    name: d.name,
+    // The service rejects an empty name, so the live preview shows a placeholder until one is typed.
+    name: d.name.trim() || 'Your site',
     logoUrl: d.logoUrl,
     fontFamily: d.fontFamily,
     colors: { ...brand.colors, primary: d.accent, accent: d.accent },
   }
 }
 
-/** Only what the form edits; the service fills the rest from the template sample. */
-export function buildData(d: SiteDetails): SiteData {
-  return { pages: { home: { hero: { title: d.headline, subtitle: d.bio } } } }
+/** The template sample with the form's content laid over it, so the payload is always complete. */
+export function buildData(template: Template, d: SiteDetails): SiteData {
+  return writeContent(template.sample, d)
 }
 
 export function buildSiteInput(template: Template, d: SiteDetails): SiteInput {
@@ -70,7 +143,7 @@ export function buildSiteInput(template: Template, d: SiteDetails): SiteInput {
     slug: d.slug,
     templateId: template.id,
     brand: buildBrand(template, d),
-    data: buildData(d),
+    data: buildData(template, d),
     ...(config.siteDomain ? { domains: [`${d.slug}.${config.siteDomain}`] } : {}),
   }
 }
@@ -83,6 +156,12 @@ export function validateDetails(d: SiteDetails): DetailsErrors {
   if (!d.slug) errors.slug = 'Enter a site address'
   else if (!SLUG_PATTERN.test(d.slug)) errors.slug = 'Use lowercase letters, numbers and dashes'
   if (!d.headline.trim()) errors.headline = 'Enter a headline'
+  if (!d.bio.trim()) errors.bio = 'Enter a short bio'
+  if (!d.measurements.length) errors.measurements = 'Add at least one measurement'
+  else if (d.measurements.some((m) => !m.label.trim() || !m.value.trim()))
+    errors.measurements = 'Fill in every measurement'
+  if (d.stats.some((st) => !st.label.trim() || !st.value.trim()))
+    errors.stats = 'Fill in every stat'
   return errors
 }
 
@@ -93,21 +172,22 @@ export function fieldForServiceError(field: string): keyof SiteDetails | undefin
   if (field === 'brand.logoUrl') return 'logoUrl'
   if (field === 'brand.fontFamily') return 'fontFamily'
   if (field.startsWith('brand.colors')) return 'accent'
-  if (field.endsWith('hero.title')) return 'headline'
-  if (field.endsWith('hero.subtitle')) return 'bio'
+  if (field.endsWith('cover.title')) return 'headline'
+  if (field.endsWith('cover.tagline')) return 'bio'
+  if (field.includes('compCard.measurements')) return 'measurements'
+  if (field.includes('compCard.stats')) return 'stats'
   return undefined
 }
+
 /** Form values of an existing site (edit screen). */
 export function detailsFromSite(site: Site): SiteDetails {
-  const hero = rec(rec(rec(site.data.pages).home).hero)
   return {
     name: site.brand.name,
     slug: site.slug,
     logoUrl: site.brand.logoUrl,
     accent: site.brand.colors.accent,
     fontFamily: site.brand.fontFamily,
-    headline: typeof hero.title === 'string' ? hero.title : '',
-    bio: typeof hero.subtitle === 'string' ? hero.subtitle : '',
+    ...readContent(site.data),
   }
 }
 
@@ -115,9 +195,6 @@ export const sitePages = (site: Site) => Object.keys(rec(site.data.pages))
 
 /** Edited fields laid over the stored site: PUT replaces the whole site, so everything else is kept. */
 export function applyDetails(site: Site, d: SiteDetails): SiteInput {
-  const pages = rec(site.data.pages)
-  const home = rec(pages.home)
-  const hero = rec(home.hero)
   return {
     slug: site.slug,
     templateId: site.templateId,
@@ -128,10 +205,7 @@ export function applyDetails(site: Site, d: SiteDetails): SiteInput {
       fontFamily: d.fontFamily,
       colors: { ...site.brand.colors, primary: d.accent, accent: d.accent },
     },
-    data: {
-      ...site.data,
-      pages: { ...pages, home: { ...home, hero: { ...hero, title: d.headline, subtitle: d.bio } } },
-    },
+    data: writeContent(site.data, d),
     ...(site.domains?.length ? { domains: site.domains } : {}),
   }
 }

@@ -52,7 +52,7 @@ function next() {
         :address="siteAddress(d.slug || 'your-site')"
         :template-id="tpl.id"
         :brand="buildBrand(tpl, d)"
-        :data="buildData(d)"
+        :data="buildData(tpl, d)"
         :pages="templatePages(tpl)"
       />
     </template>

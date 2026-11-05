@@ -10,6 +10,8 @@ import KpiCard from '@/components/analytics/KpiCard.vue'
 import RangeTabs from '@/components/analytics/RangeTabs.vue'
 import RankList from '@/components/analytics/RankList.vue'
 import UiButton from '@/components/ui/UiButton.vue'
+import UiSelect from '@/components/ui/UiSelect.vue'
+import PageRail from '@/components/wizard/PageRail.vue'
 import SitePreview from '@/components/wizard/SitePreview.vue'
 import { config } from '@/config'
 import { pageLabel } from '@/domain/pages'
@@ -73,6 +75,8 @@ const published = computed(() =>
 )
 
 /** Backend gap: no status endpoint, so this only updates the mock. */
+const statusOptions = SITE_STATUSES.map((s) => ({ value: s, label: STATUS_LABEL[s] }))
+
 function changeStatus() {
   if (!site.value) return
   setSiteMeta(site.value.slug, { status: status.value }, site.value.brand.name)
@@ -95,30 +99,16 @@ function changeStatus() {
       <button type="button" aria-label="Close" class="cursor-pointer" @click="router.push('/')">
         <IconClose class="size-6" />
       </button>
-      <button
-        v-for="key in pages"
-        :key="key"
-        type="button"
-        class="flex cursor-pointer flex-col items-center gap-2 text-xs text-text-2"
-        :aria-pressed="(page ?? pages[0]) === key"
-        @click="page = key"
-      >
-        <span
-          class="flex h-[152px] w-[120px] flex-col gap-1.5 rounded-sm border-2 bg-white p-3"
-          :class="(page ?? pages[0]) === key ? 'border-electric' : 'border-transparent'"
-        >
-          <i class="h-1 rounded-sm bg-stroke" /><i class="h-1 rounded-sm bg-stroke" /><i
-            class="h-1 w-2/3 rounded-sm bg-stroke"
-          />
-        </span>
-        {{ pageLabel(key) }}
-      </button>
+      <PageRail
+        :model-value="page ?? pages[0]!"
+        :pages="pages"
+        @update:model-value="page = $event"
+      />
     </nav>
 
-    <main class="min-w-0 p-6">
+    <main class="min-h-0 min-w-0 p-6">
       <SitePreview
         v-model:page="page"
-        fill
         :show-rail="false"
         :address="siteAddress(site.slug)"
         :template-id="site.templateId"
@@ -131,15 +121,15 @@ function changeStatus() {
     <aside class="flex flex-col gap-5 overflow-y-auto border-l border-divider p-6">
       <header class="flex items-start justify-between gap-3">
         <h1 class="text-xl font-medium">{{ site.brand.name }}</h1>
-        <select
+        <UiSelect
           v-if="config.useMocks"
           v-model="status"
-          aria-label="Status"
-          class="h-8 cursor-pointer rounded-full border border-divider bg-slate px-3 text-sm"
-          @change="changeStatus"
-        >
-          <option v-for="s in SITE_STATUSES" :key="s" :value="s">{{ STATUS_LABEL[s] }}</option>
-        </select>
+          label="Status"
+          variant="pill"
+          align="right"
+          :options="statusOptions"
+          @update:model-value="changeStatus"
+        />
       </header>
       <p v-if="description" class="text-sm text-text-2">{{ description }}</p>
       <p class="text-xs text-text-2">

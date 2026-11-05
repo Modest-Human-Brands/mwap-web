@@ -67,3 +67,8 @@
     @apply bg-midnight font-sans text-sm text-white antialiased;
   }
 }
+/* Keyboard focus: visible on everything interactive, never on mouse clicks. */
+:where(a, button, select, input, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-electric);
+  outline-offset: 2px;
+}

@@ -7,7 +7,7 @@ import UiButton from '@/components/ui/UiButton.vue'
 import SitePreview from '@/components/wizard/SitePreview.vue'
 import WizardShell from '@/components/wizard/WizardShell.vue'
 import { TEMPLATE_CATEGORIES } from '@/domain/templates'
-import { buildBrand, siteAddress, templatePages } from '@/domain/wizard'
+import { buildBrand, defaultsFromTemplate, siteAddress, templatePages } from '@/domain/wizard'
 import { useWizardStore } from '@/stores/wizard'
 
 const store = useWizardStore()
@@ -87,6 +87,7 @@ const tpl = computed(() => store.backendTemplate)
             </span>
             <span class="text-sm font-medium">{{ t.label }}</span>
             <span class="text-xs text-text-2">{{ t.category }}</span>
+            <span v-if="t.mock" class="text-xs text-warning">Preview only</span>
             <span
               v-if="store.templateId === t.id"
               class="absolute top-5 right-5 flex size-5 items-center justify-center rounded-full bg-electric"
@@ -111,7 +112,7 @@ const tpl = computed(() => store.backendTemplate)
         :title="`Preview · ${store.template.label}`"
         :address="siteAddress('your-site')"
         :template-id="tpl.id"
-        :brand="tpl.sample.brand"
+        :brand="buildBrand(tpl, defaultsFromTemplate(tpl))"
         :data="{}"
         :pages="templatePages(tpl)"
       />

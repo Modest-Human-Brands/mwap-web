@@ -52,7 +52,8 @@ export interface TemplateSummary {
 
 export interface Template extends TemplateSummary {
   schema: Record<string, unknown>
-  sample: { brand: Brand; data: SiteData }
+  /** A complete `data` payload (no brand: the service has none to suggest). */
+  sample: SiteData
 }
 
 export interface SiteInput {

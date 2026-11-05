@@ -14,12 +14,10 @@ import UiButton from '@/components/ui/UiButton.vue'
 
     <nav class="flex items-center gap-6">
       <RouterLink
-        v-if="$route.name !== 'analytics'"
-        to="/analytics"
+        :to="$route.name === 'analytics' ? '/' : '/analytics'"
         class="text-sm text-text-2 transition-colors hover:text-white"
-        active-class="text-white"
       >
-        Analytics
+        {{ $route.name === 'analytics' ? 'Sites' : 'Analytics' }}
       </RouterLink>
       <UiButton to="/new">New site</UiButton>
     </nav>

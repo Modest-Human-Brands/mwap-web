@@ -23,5 +23,11 @@ const emit = defineEmits<{ archive: [site: SiteCard] }>()
       :site="site"
       @archive="emit('archive', $event)"
     />
+    <p
+      v-if="!sites.length"
+      class="rounded-lg border border-dashed border-divider px-4 py-6 text-center text-xs text-text-2"
+    >
+      No sites here
+    </p>
   </section>
 </template>

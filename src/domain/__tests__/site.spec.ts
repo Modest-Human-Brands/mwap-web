@@ -5,7 +5,7 @@ import { formatPages, matchesSearch, type SiteCard } from '../site'
 const card: SiteCard = {
   slug: 'nova-marek',
   orgId: 'default',
-  templateId: 'studio-v1',
+  templateId: 'contact-sheet',
   name: 'Nova Marek',
   updatedAt: '2026-10-31T00:00:00.000Z',
   index: 1,

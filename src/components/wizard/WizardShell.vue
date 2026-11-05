@@ -78,7 +78,7 @@ function leave() {
       </footer>
     </div>
 
-    <aside class="pt-1"><slot name="preview" /></aside>
+    <aside class="h-[calc(100vh-72px)] min-w-0"><slot name="preview" /></aside>
 
     <UiDialog v-if="confirming" title="Discard your changes?" @close="confirming = false">
       Your changes have not been saved and will be lost.

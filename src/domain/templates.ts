@@ -14,9 +14,11 @@ export interface WizardTemplate {
   backendId: string
 }
 
-/** Backend gap: the service has one template (studio-v1); the design shows seven. */
+/**
+ * Backend gap: the design shows seven templates, the service has fewer. The model portfolio is the
+ * service's `contact-sheet`; the rest are listed as mocks and render through a real template.
+ */
 const MOCK_TEMPLATES: Omit<WizardTemplate, 'mock' | 'backendId'>[] = [
-  { id: 'model-portfolio', label: 'Model portfolio', category: 'Portfolio' },
   { id: 'showreel-portfolio', label: 'Showreel portfolio', category: 'Portfolio' },
   { id: 'photo-portfolio', label: 'Photo portfolio', category: 'Portfolio' },
   { id: 'launch-page', label: 'Launch page', category: 'Landing page' },
@@ -24,20 +26,24 @@ const MOCK_TEMPLATES: Omit<WizardTemplate, 'mock' | 'backendId'>[] = [
   { id: 'brand-story', label: 'Brand story', category: 'Brand site' },
 ]
 
-const STUDIO_ID = 'studio-v1'
+/** The service names categories in the plural ("Portfolios"); the picker uses the singular. */
+export function categoryFor(name: string | null): TemplateCategory {
+  const key = (name ?? '').toLowerCase().replace(/s$/, '')
+  return TEMPLATE_CATEGORIES.find((c) => c.toLowerCase().replace(/s$/, '') === key) ?? 'Brand site'
+}
 
 export function buildCatalog(real: TemplateSummary[]): WizardTemplate[] {
-  const backendId = real[0]?.id ?? STUDIO_ID
   const live = real.map<WizardTemplate>((t) => ({
     id: t.id,
-    label: t.id === STUDIO_ID ? 'Studio site' : t.label,
-    category: 'Brand site',
+    label: t.label,
+    category: categoryFor(t.category),
     mock: false,
     backendId: t.id,
   }))
-  if (!config.useMocks) return live
+  const backendId = real[0]?.id
+  if (!config.useMocks || !backendId) return live
   const mocks = MOCK_TEMPLATES.map<WizardTemplate>((t) => ({ ...t, mock: true, backendId }))
-  return [...mocks, ...live]
+  return [...live, ...mocks]
 }
 
 export const ACCENTS = [
