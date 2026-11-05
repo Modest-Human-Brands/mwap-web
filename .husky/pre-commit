@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+set -e
+
+# Scan the staged diff when gitleaks is available.
+if command -v gitleaks >/dev/null 2>&1; then
+  git diff --cached --no-ext-diff --binary |
+    gitleaks stdin --no-banner --verbose
+else
+  echo "⚠️ gitleaks not found; skipping secret scan"
+fi
+
+# Run the staged tasks configured in vite.config.ts.
+bun run vp staged

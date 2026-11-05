@@ -1,0 +1,160 @@
+import { fileURLToPath, URL } from 'node:url'
+
+import { defineConfig, lazyPlugins } from 'vite-plus'
+import vue from '@vitejs/plugin-vue'
+import vueDevTools from 'vite-plugin-vue-devtools'
+import tailwindcss from '@tailwindcss/vite'
+import Icons from 'unplugin-icons/vite'
+import { VitePWA } from 'vite-plugin-pwa'
+
+// https://vite.dev/config/
+export default defineConfig({
+  staged: {
+    '*': 'vp check --fix',
+  },
+  fmt: {
+    semi: false,
+    singleQuote: true,
+  },
+  lint: {
+    plugins: ['typescript', 'unicorn', 'oxc', 'vue', 'vitest'],
+    categories: {
+      correctness: 'error',
+    },
+    env: {
+      browser: true,
+      builtin: true,
+    },
+    ignorePatterns: ['**/dist/**', '**/dist-ssr/**', '**/coverage/**'],
+    rules: {
+      'no-array-constructor': 'error',
+      'typescript/ban-ts-comment': 'error',
+      'typescript/no-empty-object-type': 'error',
+      'typescript/no-explicit-any': 'error',
+      'typescript/no-namespace': 'error',
+      'typescript/no-require-imports': 'error',
+      'typescript/no-unnecessary-type-constraint': 'error',
+      'typescript/no-unsafe-function-type': 'error',
+      'vite-plus/prefer-vite-plus-imports': 'error',
+    },
+    overrides: [
+      {
+        files: ['**/*.ts', '**/*.tsx', '**/*.mts', '**/*.cts', '**/*.vue'],
+        rules: {
+          'constructor-super': 'off',
+          'getter-return': 'off',
+          'no-class-assign': 'off',
+          'no-const-assign': 'off',
+          'no-dupe-class-members': 'off',
+          'no-dupe-keys': 'off',
+          'no-func-assign': 'off',
+          'no-import-assign': 'off',
+          'no-new-native-nonconstructor': 'off',
+          'no-obj-calls': 'off',
+          'no-redeclare': 'off',
+          'no-setter-return': 'off',
+          'no-this-before-super': 'off',
+          'no-undef': 'off',
+          'no-unreachable': 'off',
+          'no-unsafe-negation': 'off',
+          'no-var': 'error',
+          'no-with': 'off',
+          'prefer-const': 'error',
+          'prefer-rest-params': 'error',
+          'prefer-spread': 'error',
+        },
+      },
+      {
+        files: ['src/**/__tests__/*'],
+        rules: {
+          'vitest/expect-expect': 'error',
+          'vitest/no-commented-out-tests': 'error',
+          'vitest/no-conditional-expect': 'error',
+          'vitest/no-disabled-tests': 'warn',
+          'vitest/no-focused-tests': 'error',
+          'vitest/no-identical-title': 'error',
+          'vitest/no-import-node-test': 'error',
+          'vitest/no-interpolation-in-snapshots': 'error',
+          'vitest/no-mocks-import': 'error',
+          'vitest/no-standalone-expect': 'error',
+          'vitest/no-unneeded-async-expect-function': 'error',
+          'vitest/prefer-called-exactly-once-with': 'error',
+          'vitest/require-local-test-context-for-concurrent-snapshots': 'error',
+          'vitest/valid-describe-callback': 'error',
+          'vitest/valid-expect': 'error',
+          'vitest/valid-expect-in-promise': 'error',
+          'vitest/valid-title': 'error',
+        },
+      },
+    ],
+    options: {
+      typeAware: true,
+      typeCheck: true,
+    },
+    jsPlugins: [
+      {
+        name: 'vite-plus',
+        specifier: 'vite-plus/oxlint-plugin',
+      },
+    ],
+  },
+  plugins: lazyPlugins(() => [
+    vue(),
+    vueDevTools(),
+    tailwindcss(),
+    Icons({ compiler: 'vue3' }),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.ico', 'logo.png', 'pwa/*.png'],
+      manifest: {
+        name: 'MWap',
+        short_name: 'MWap',
+        description: 'Create, publish and manage MWap sites',
+        theme_color: '#0c0912',
+        background_color: '#0c0912',
+        display: 'standalone',
+        icons: [
+          {
+            src: '/pwa/pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: '/pwa/pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+          {
+            src: '/pwa/pwa-maskable-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
+          {
+            src: '/pwa/pwa-maskable-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
+        ],
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp}'],
+      },
+    }),
+  ]),
+  server: {
+    // Same-origin in dev so the browser needs no CORS; set VITE_API_PROXY to the MWap service.
+    proxy: {
+      '/api': {
+        target: process.env.VITE_API_PROXY ?? 'http://localhost:3000',
+        changeOrigin: true,
+      },
+    },
+  },
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
+})
