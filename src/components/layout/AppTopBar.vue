@@ -14,6 +14,7 @@ import UiButton from '@/components/ui/UiButton.vue'
 
     <nav class="flex items-center gap-6">
       <RouterLink
+        v-if="$route.name !== 'analytics'"
         to="/analytics"
         class="text-sm text-text-2 transition-colors hover:text-white"
         active-class="text-white"

@@ -35,6 +35,7 @@ async function publish() {
 <template>
   <WizardShell
     title="Review and publish"
+    :dirty="store.dirty"
     subtitle="This is exactly what goes live. Go back to change anything."
   >
     <div v-if="d && store.template" class="flex flex-col gap-5">

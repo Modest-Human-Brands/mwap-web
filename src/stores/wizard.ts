@@ -43,6 +43,14 @@ export const useWizardStore = defineStore('wizard', () => {
   const publishing = ref(false)
   const published = ref<Site>()
 
+  /** True once the user changed anything from the template defaults. */
+  const dirty = computed(() => {
+    const tpl = backendTemplate.value
+    return (
+      !!(tpl && details.value) &&
+      JSON.stringify(details.value) !== JSON.stringify(defaultsFromTemplate(tpl))
+    )
+  })
   const template = computed(() => catalog.value.find((t) => t.id === templateId.value))
   const backendTemplate = computed(() =>
     template.value ? backend.value[template.value.backendId] : undefined,
@@ -157,6 +165,7 @@ export const useWizardStore = defineStore('wizard', () => {
     templateId,
     template,
     backendTemplate,
+    dirty,
     details,
     errors,
     submitError,

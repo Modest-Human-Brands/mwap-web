@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue'
 import { useDebounceFn, useElementSize } from '@vueuse/core'
 
+import { pageLabel } from '@/domain/pages'
 import { ApiError, templatesApi, type Brand, type SiteData } from '@/api'
 
 const props = withDefaults(
@@ -60,8 +61,6 @@ watch(() => [props.templateId, props.brand, props.data, page.value], render, {
   deep: true,
   immediate: true,
 })
-
-const label = (key: string) => key.charAt(0).toUpperCase() + key.slice(1)
 </script>
 
 <template>
@@ -118,7 +117,7 @@ const label = (key: string) => key.charAt(0).toUpperCase() + key.slice(1)
           :aria-pressed="current() === key"
           @click="page = key"
         >
-          {{ label(key) }}
+          {{ pageLabel(key) }}
         </button>
       </nav>
     </div>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-defineProps<{ title: string; rows: [string, number][] }>()
+defineProps<{ title: string; rows: [string, number][]; suffix?: string }>()
 const fmt = new Intl.NumberFormat('en-US')
 </script>
 
@@ -9,7 +9,7 @@ const fmt = new Intl.NumberFormat('en-US')
     <ul class="flex flex-col gap-2 text-sm">
       <li v-for="[name, value] in rows" :key="name" class="flex justify-between">
         <span class="text-text-2">{{ name }}</span>
-        <span>{{ fmt.format(value) }}</span>
+        <span>{{ fmt.format(value) }}{{ suffix }}</span>
       </li>
     </ul>
   </section>

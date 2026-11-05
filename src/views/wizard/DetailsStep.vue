@@ -23,7 +23,11 @@ function next() {
 </script>
 
 <template>
-  <WizardShell title="Site details" subtitle="Your site updates live as you type.">
+  <WizardShell
+    title="Site details"
+    subtitle="Your site updates live as you type."
+    :dirty="store.dirty"
+  >
     <DetailsForm
       v-if="d"
       :details="d"

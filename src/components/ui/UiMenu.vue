@@ -20,7 +20,7 @@ function select(item: MenuItem) {
 </script>
 
 <template>
-  <div ref="root" class="relative">
+  <div ref="root" class="relative" @keydown.esc="open = false">
     <button
       type="button"
       :aria-label="label"

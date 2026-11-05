@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 
 import SiteColumn from '@/components/sites/SiteColumn.vue'
 import SitesEmpty from '@/components/sites/SitesEmpty.vue'
+import SitesSkeleton from '@/components/sites/SitesSkeleton.vue'
 import UiButton from '@/components/ui/UiButton.vue'
 import UiDialog from '@/components/ui/UiDialog.vue'
 import type { SiteCard } from '@/domain/site'
@@ -36,7 +37,7 @@ function confirmArchive() {
       {{ store.error }}
       <button class="ml-2 cursor-pointer underline" @click="store.load()">Retry</button>
     </p>
-    <p v-else-if="!store.loaded" class="text-sm text-text-2">Loading…</p>
+    <SitesSkeleton v-else-if="!store.loaded" />
     <SitesEmpty
       v-else-if="!store.filtered.length"
       :searching="!!store.search.trim()"

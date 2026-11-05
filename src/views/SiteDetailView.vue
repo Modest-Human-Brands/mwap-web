@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import IconPlus from '~icons/lucide/plus'
 import IconClose from '~icons/lucide/x'
 
-import { ApiError, sitesApi, type Site } from '@/api'
+import { ApiError, sitesApi, templatesApi, type Site } from '@/api'
 import BarChart from '@/components/analytics/BarChart.vue'
 import KpiCard from '@/components/analytics/KpiCard.vue'
 import RangeTabs from '@/components/analytics/RangeTabs.vue'
@@ -12,6 +12,7 @@ import RankList from '@/components/analytics/RankList.vue'
 import UiButton from '@/components/ui/UiButton.vue'
 import SitePreview from '@/components/wizard/SitePreview.vue'
 import { config } from '@/config'
+import { pageLabel } from '@/domain/pages'
 import { SITE_STATUSES, STATUS_LABEL, formatPages, siteUrl, type SiteStatus } from '@/domain/site'
 import { siteAddress, sitePages } from '@/domain/wizard'
 import { siteActivity, siteAnalytics, type Range } from '@/mock/analytics'
@@ -28,6 +29,7 @@ const error = ref('')
 const status = ref<SiteStatus>('published')
 const description = ref('')
 const range = ref<Range>(30)
+const templateLabel = ref('')
 const page = ref<string>()
 
 async function load() {
@@ -37,6 +39,10 @@ async function load() {
   try {
     const s = await sitesApi.get(slug.value)
     site.value = s
+    templatesApi
+      .list()
+      .then((all) => (templateLabel.value = all.find((t) => t.id === s.templateId)?.label ?? ''))
+      .catch(() => {})
     if (config.useMocks) {
       const meta = getSiteMeta(s.slug, s.brand.name)
       status.value = meta.status
@@ -56,7 +62,7 @@ watch(slug, load, { immediate: true })
 const pages = computed(() => (site.value ? sitePages(site.value) : []))
 const analytics = computed(() => siteAnalytics(slug.value, range.value, pages.value))
 const activity = computed(() =>
-  siteActivity(site.value?.templateId ?? '', status.value === 'published'),
+  siteActivity(templateLabel.value || 'Site', status.value === 'published'),
 )
 const published = computed(() =>
   site.value?.updatedAt
@@ -65,7 +71,6 @@ const published = computed(() =>
       )
     : '',
 )
-const label = (key: string) => key.charAt(0).toUpperCase() + key.slice(1)
 
 /** Backend gap: no status endpoint, so this only updates the mock. */
 function changeStatus() {
@@ -106,7 +111,7 @@ function changeStatus() {
             class="h-1 w-2/3 rounded-sm bg-stroke"
           />
         </span>
-        {{ label(key) }}
+        {{ pageLabel(key) }}
       </button>
     </nav>
 

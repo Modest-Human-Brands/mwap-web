@@ -1,12 +1,38 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 
 defineProps<{ title: string }>()
 const emit = defineEmits<{ close: [] }>()
 
-const onKey = (e: KeyboardEvent) => e.key === 'Escape' && emit('close')
-onMounted(() => window.addEventListener('keydown', onKey))
-onUnmounted(() => window.removeEventListener('keydown', onKey))
+const panel = ref<HTMLElement>()
+const opener = document.activeElement as HTMLElement | null
+
+const onKey = (e: KeyboardEvent) => {
+  if (e.key === 'Escape') emit('close')
+  // Keep Tab inside the dialog.
+  if (e.key === 'Tab' && panel.value) {
+    const items = [...panel.value.querySelectorAll<HTMLElement>('button, a[href], input, select')]
+    const first = items[0]
+    const last = items[items.length - 1]
+    const wrapTo = e.shiftKey
+      ? document.activeElement === first && last
+      : document.activeElement === last && first
+    if (wrapTo) {
+      e.preventDefault()
+      wrapTo.focus()
+    }
+  }
+}
+
+onMounted(async () => {
+  window.addEventListener('keydown', onKey)
+  await nextTick()
+  panel.value?.querySelector<HTMLElement>('button')?.focus()
+})
+onUnmounted(() => {
+  window.removeEventListener('keydown', onKey)
+  opener?.focus?.()
+})
 </script>
 
 <template>
@@ -16,6 +42,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
       @click.self="emit('close')"
     >
       <div
+        ref="panel"
         role="dialog"
         aria-modal="true"
         :aria-label="title"

@@ -1,15 +1,37 @@
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
+import { ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
-import { STEPS } from '@/stores/wizard'
+import UiButton from '@/components/ui/UiButton.vue'
+import UiDialog from '@/components/ui/UiDialog.vue'
+import { STEPS, useWizardStore } from '@/stores/wizard'
 
-withDefaults(defineProps<{ title?: string; subtitle?: string; showStepper?: boolean }>(), {
-  showStepper: true,
-})
+const props = withDefaults(
+  defineProps<{
+    title?: string
+    subtitle?: string
+    showStepper?: boolean
+    /** Unsaved changes: leaving asks for confirmation first. */
+    dirty?: boolean
+    /** Where Cancel goes. */
+    leaveTo?: string
+  }>(),
+  { showStepper: true, leaveTo: '/' },
+)
 defineSlots<{ default(): unknown; footer(): unknown; preview(): unknown }>()
 
 const route = useRoute()
+const router = useRouter()
+const wizard = useWizardStore()
 const current = () => STEPS.findIndex((s) => s.path === route.path)
+
+const confirming = ref(false)
+
+function leave() {
+  confirming.value = false
+  if (props.leaveTo === '/') wizard.reset()
+  router.push(props.leaveTo)
+}
 </script>
 
 <template>
@@ -23,9 +45,13 @@ const current = () => STEPS.findIndex((s) => s.path === route.path)
           >
           <span class="text-sm font-medium">MWap</span>
         </RouterLink>
-        <RouterLink to="/" class="text-sm text-text-2 transition-colors hover:text-white">
+        <button
+          type="button"
+          class="cursor-pointer text-sm text-text-2 transition-colors hover:text-white"
+          @click="dirty ? (confirming = true) : leave()"
+        >
           {{ showStepper ? 'Cancel' : 'Close' }}
-        </RouterLink>
+        </button>
       </header>
 
       <ol v-if="showStepper" class="mt-8 flex gap-3" aria-label="Steps">
@@ -53,5 +79,15 @@ const current = () => STEPS.findIndex((s) => s.path === route.path)
     </div>
 
     <aside class="pt-1"><slot name="preview" /></aside>
+
+    <UiDialog v-if="confirming" title="Discard your changes?" @close="confirming = false">
+      Your changes have not been saved and will be lost.
+      <template #actions>
+        <UiButton variant="ghost" class="border-0" @click="confirming = false"
+          >Keep editing</UiButton
+        >
+        <UiButton @click="leave">Discard</UiButton>
+      </template>
+    </UiDialog>
   </div>
 </template>

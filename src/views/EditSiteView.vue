@@ -29,11 +29,13 @@ const errors = ref<DetailsErrors>({})
 const loadError = ref('')
 const submitError = ref('')
 const saving = ref(false)
+const initial = ref('')
 
 onMounted(async () => {
   try {
     site.value = await sitesApi.get(slug)
     details.value = detailsFromSite(site.value)
+    initial.value = JSON.stringify(details.value)
   } catch (e) {
     loadError.value =
       e instanceof ApiError && e.status === 404
@@ -86,6 +88,8 @@ async function save() {
 <template>
   <WizardShell
     :show-stepper="false"
+    :dirty="!!details && JSON.stringify(details) !== initial"
+    :leave-to="`/sites/${slug}`"
     title="Edit site"
     subtitle="Your site updates live as you type. Changes go live when you save."
   >
