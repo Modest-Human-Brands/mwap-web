@@ -2,9 +2,21 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  scrollBehavior: (to) => (to.hash ? { el: to.hash, behavior: 'smooth' } : { top: 0 }),
   routes: [
     { path: '/', name: 'sites', component: () => import('@/views/SitesView.vue') },
-    { path: '/sites/:slug', name: 'site', component: () => import('@/views/SiteDetailView.vue') },
+    {
+      path: '/sites/:slug',
+      name: 'site',
+      component: () => import('@/views/SiteDetailView.vue'),
+      meta: { bare: true },
+    },
+    {
+      path: '/sites/:slug/edit',
+      name: 'site-edit',
+      component: () => import('@/views/EditSiteView.vue'),
+      meta: { bare: true },
+    },
     { path: '/analytics', name: 'analytics', component: () => import('@/views/AnalyticsView.vue') },
     {
       path: '/new',

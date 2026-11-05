@@ -4,18 +4,27 @@ import { useDebounceFn, useElementSize } from '@vueuse/core'
 
 import { ApiError, templatesApi, type Brand, type SiteData } from '@/api'
 
-const props = defineProps<{
-  title: string
-  address: string
-  templateId: string
-  brand: Brand
-  data: SiteData
-  pages: string[]
-}>()
+const props = withDefaults(
+  defineProps<{
+    title?: string
+    address: string
+    templateId: string
+    brand: Brand
+    data: SiteData
+    pages: string[]
+    /** Show the page switcher beside the frame (the detail screen has its own). */
+    showRail?: boolean
+    /** Fill the parent's height instead of the fixed wizard height. */
+    fill?: boolean
+  }>(),
+  { showRail: true },
+)
 
 const DESKTOP_WIDTH = 1440
 
-const page = ref(props.pages[0] ?? 'home')
+const page = defineModel<string>('page')
+const current = () => page.value ?? props.pages[0] ?? 'home'
+
 const html = ref('')
 const error = ref('')
 const loading = ref(false)
@@ -31,7 +40,7 @@ const render = useDebounceFn(async () => {
   loading.value = true
   try {
     const res = await templatesApi.preview(
-      { templateId: props.templateId, page: page.value, brand: props.brand, data: props.data },
+      { templateId: props.templateId, page: current(), brand: props.brand, data: props.data },
       controller.signal,
     )
     html.value = res.html
@@ -51,22 +60,17 @@ watch(() => [props.templateId, props.brand, props.data, page.value], render, {
   deep: true,
   immediate: true,
 })
-watch(
-  () => props.pages,
-  (pages) => {
-    if (!pages.includes(page.value)) page.value = pages[0] ?? 'home'
-  },
-)
 
 const label = (key: string) => key.charAt(0).toUpperCase() + key.slice(1)
 </script>
 
 <template>
   <section class="flex h-full flex-col gap-4" aria-label="Site preview">
-    <h2 class="px-1 text-sm font-medium text-text-2">{{ title }}</h2>
-    <div class="flex items-start gap-6">
+    <h2 v-if="title" class="px-1 text-sm font-medium text-text-2">{{ title }}</h2>
+    <div class="flex min-h-0 items-start gap-6" :class="fill && 'flex-1'">
       <div
-        class="flex h-[640px] min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-divider bg-slate"
+        class="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-divider bg-slate"
+        :class="fill ? 'h-full' : 'h-[640px]'"
       >
         <div class="flex h-10 shrink-0 items-center gap-3 px-3.5">
           <span class="flex gap-1.5" aria-hidden="true">
@@ -101,7 +105,7 @@ const label = (key: string) => key.charAt(0).toUpperCase() + key.slice(1)
       </div>
 
       <nav
-        v-if="pages.length"
+        v-if="showRail && pages.length"
         class="flex flex-col gap-1 rounded-xl border border-divider bg-slate p-2"
         aria-label="Preview pages"
       >
@@ -110,8 +114,8 @@ const label = (key: string) => key.charAt(0).toUpperCase() + key.slice(1)
           :key="key"
           type="button"
           class="cursor-pointer rounded-md px-3 py-2 font-mono text-xs tracking-wider uppercase transition-colors"
-          :class="page === key ? 'bg-electric text-white' : 'text-text-2 hover:text-white'"
-          :aria-pressed="page === key"
+          :class="current() === key ? 'bg-electric text-white' : 'text-text-2 hover:text-white'"
+          :aria-pressed="current() === key"
           @click="page = key"
         >
           {{ label(key) }}

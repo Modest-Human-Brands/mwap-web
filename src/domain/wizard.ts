@@ -1,4 +1,4 @@
-import type { Brand, SiteData, SiteInput, Template } from '@/api'
+import type { Brand, Site, SiteData, SiteInput, Template } from '@/api'
 import { config } from '@/config'
 
 export interface SiteDetails {
@@ -96,4 +96,42 @@ export function fieldForServiceError(field: string): keyof SiteDetails | undefin
   if (field.endsWith('hero.title')) return 'headline'
   if (field.endsWith('hero.subtitle')) return 'bio'
   return undefined
+}
+/** Form values of an existing site (edit screen). */
+export function detailsFromSite(site: Site): SiteDetails {
+  const hero = rec(rec(rec(site.data.pages).home).hero)
+  return {
+    name: site.brand.name,
+    slug: site.slug,
+    logoUrl: site.brand.logoUrl,
+    accent: site.brand.colors.accent,
+    fontFamily: site.brand.fontFamily,
+    headline: typeof hero.title === 'string' ? hero.title : '',
+    bio: typeof hero.subtitle === 'string' ? hero.subtitle : '',
+  }
+}
+
+export const sitePages = (site: Site) => Object.keys(rec(site.data.pages))
+
+/** Edited fields laid over the stored site: PUT replaces the whole site, so everything else is kept. */
+export function applyDetails(site: Site, d: SiteDetails): SiteInput {
+  const pages = rec(site.data.pages)
+  const home = rec(pages.home)
+  const hero = rec(home.hero)
+  return {
+    slug: site.slug,
+    templateId: site.templateId,
+    brand: {
+      ...site.brand,
+      name: d.name,
+      logoUrl: d.logoUrl,
+      fontFamily: d.fontFamily,
+      colors: { ...site.brand.colors, primary: d.accent, accent: d.accent },
+    },
+    data: {
+      ...site.data,
+      pages: { ...pages, home: { ...home, hero: { ...hero, title: d.headline, subtitle: d.bio } } },
+    },
+    ...(site.domains?.length ? { domains: site.domains } : {}),
+  }
 }
