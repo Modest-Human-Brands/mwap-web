@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.4
+
+[compare changes](https://github.com/Modest-Human-Brands/mwap-web/compare/v0.0.3...v0.0.4)
+
+### 💅 Refactors
+
+- **env:** Update environment variables and remove proxy configuration ([71a3ad4](https://github.com/Modest-Human-Brands/mwap-web/commit/71a3ad4))
+
+### ❤️ Contributors
+
+- Shirsendu Bairagi ([@shba007](https://github.com/shba007))
+
 ## v0.0.3
 
 [compare changes](https://github.com/Modest-Human-Brands/mwap-web/compare/v0.0.2...v0.0.3)
