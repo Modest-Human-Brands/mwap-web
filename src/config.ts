@@ -13,12 +13,15 @@ export interface AppConfig {
 
 const env = import.meta.env
 
+const DEV_SERVICE = 'http://localhost:3001'
+const PROD_SERVICE = 'https://wap.modesthumanbrands.com'
+
 export const config: AppConfig = {
-  // Dev goes through the Vite proxy (same origin); production may point at the service.
-  apiBaseUrl: env.DEV ? '' : (env.VITE_MWAP_API_URL ?? ''),
+  // The browser calls the service directly (no proxy): local in dev, deployed in production.
+  apiBaseUrl: env.VITE_MWAP_API_URL || (env.DEV ? DEV_SERVICE : PROD_SERVICE),
   siteUrl: env.VUE_PUBLIC_SITE_URL ?? '',
   siteDomain: env.VITE_MWAP_SITE_DOMAIN ?? '',
-  sitesBaseUrl: env.VITE_MWAP_SITES_URL ?? (env.DEV ? 'http://localhost:3000' : ''),
+  sitesBaseUrl: env.VITE_MWAP_SITES_URL || (env.DEV ? DEV_SERVICE : PROD_SERVICE),
   useMocks: env.VITE_USE_MOCKS !== 'false',
   apiKey: env.DEV ? (env.VITE_MWAP_API_KEY ?? '') : '',
   orgId: env.VITE_MWAP_ORG_ID || 'default',
