@@ -21,7 +21,7 @@ export function useAppNotification(initialOptions: UseWebNotificationOptions = {
       dir: 'auto',
       lang: 'en',
       renotify: true,
-      tag: 'vuetemplate-notification',
+      tag: 'mwap-web-notification',
       ...initialOptions,
     })
 
@@ -47,7 +47,7 @@ export function useAppNotification(initialOptions: UseWebNotificationOptions = {
             icon: payload.icon ?? '/pwa/pwa-192x192.png',
             dir: payload.dir ?? 'auto',
             lang: payload.lang ?? 'en',
-            tag: payload.tag ?? 'vuetemplate-notification',
+            tag: payload.tag ?? 'mwap-web-notification',
           })
         }
         await show()

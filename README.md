@@ -1,20 +1,20 @@
 <p align="center">
   <picture>
-    <img src="https://raw.githubusercontent.com/shba007/vuetemplate/main/src-tauri/icons/icon.png" alt="VueTemplate Logo" width="80" height="80" />
+    <img src="https://raw.githubusercontent.com/shba007/mwap-web/main/src-tauri/icons/icon.png" alt="MWap Web Logo" width="80" height="80" />
   </picture>
 </p>
 
-<h1 align="center">VueTemplate</h1>
+<h1 align="center">MWap Web</h1>
 
 <p align="center">
   <strong>Production-ready cross-platform starter kit for Web, Desktop, and Mobile.</strong>
 </p>
 
 <p align="center">
-  <a href="https://github.com/shba007/vuetemplate/releases"><img src="https://img.shields.io/github/v/release/shba007/vuetemplate?include_prereleases&style=flat-square&color=blue" alt="Latest Release" /></a>
-  <a href="https://github.com/shba007/vuetemplate/actions/workflows/integrate.yml"><img src="https://img.shields.io/github/actions/workflow/status/shba007/vuetemplate/integrate.yml?branch=develop&label=CI&style=flat-square" alt="CI Status" /></a>
-  <a href="https://github.com/shba007/vuetemplate/actions/workflows/deploy.yml"><img src="https://img.shields.io/github/actions/workflow/status/shba007/vuetemplate/deploy.yml?label=CD&style=flat-square" alt="CD Status" /></a>
-  <a href="https://github.com/shba007/vuetemplate/blob/main/LICENSE"><img src="https://img.shields.io/github/license/shba007/vuetemplate?style=flat-square" alt="License" /></a>
+  <a href="https://github.com/shba007/mwap-web/releases"><img src="https://img.shields.io/github/v/release/shba007/mwap-web?include_prereleases&style=flat-square&color=blue" alt="Latest Release" /></a>
+  <a href="https://github.com/shba007/mwap-web/actions/workflows/integrate.yml"><img src="https://img.shields.io/github/actions/workflow/status/shba007/mwap-web/integrate.yml?branch=develop&label=CI&style=flat-square" alt="CI Status" /></a>
+  <a href="https://github.com/shba007/mwap-web/actions/workflows/deploy.yml"><img src="https://img.shields.io/github/actions/workflow/status/shba007/mwap-web/deploy.yml?label=CD&style=flat-square" alt="CD Status" /></a>
+  <a href="https://github.com/shba007/mwap-web/blob/main/LICENSE"><img src="https://img.shields.io/github/license/shba007/mwap-web?style=flat-square" alt="License" /></a>
 </p>
 
 <p align="center">
@@ -29,7 +29,7 @@
 
 ---
 
-VueTemplate is an opinionated, high-performance starter template engineered for building cross-platform applications across Web, Desktop (Windows, macOS, Linux), and Mobile (Android). Powered by Vue 3, Tauri v2, Vite-Plus, VueUse, and Tailwind CSS v4, it provides unified development workflows with zero-config linting, automated native release builds, and integrated desktop auto-updates.
+MWap Web is an opinionated, high-performance starter template engineered for building cross-platform applications across Web, Desktop (Windows, macOS, Linux), and Mobile (Android). Powered by Vue 3, Tauri v2, Vite-Plus, VueUse, and Tailwind CSS v4, it provides unified development workflows with zero-config linting, automated native release builds, and integrated desktop auto-updates.
 
 ### Features
 
@@ -52,14 +52,14 @@ VueTemplate is an opinionated, high-performance starter template engineered for 
 Clone the template repository using [`giget`](https://github.com/unjs/giget):
 
 ```bash
-bunx giget@latest gh:shba007/vuetemplate#main my-app
+bunx giget@latest gh:shba007/mwap-web#main my-app
 cd my-app
 ```
 
 Or via standard Git:
 
 ```bash
-git clone https://github.com/shba007/vuetemplate.git my-app
+git clone https://github.com/shba007/mwap-web.git my-app
 cd my-app
 ```
 
@@ -97,7 +97,7 @@ When creating a new project from this template, update the following configurati
 | `.github/workflows/deploy.yml`               | `asset_name` (lines 296, 304)                          | Release asset naming for Android APK and AAB files        |
 
 > [!NOTE]
-> Tailwind CSS v4 does not use a `tailwind.config.ts` file. Configure custom theme variables directly in [`src/style.css`](file:///d:/Projects/Public/vuetemplate/code/src/style.css) using CSS `@theme` blocks.
+> Tailwind CSS v4 does not use a `tailwind.config.ts` file. Configure custom theme variables directly in [`src/style.css`](src/style.css) using CSS `@theme` blocks.
 
 ---
 
@@ -105,24 +105,24 @@ When creating a new project from this template, update the following configurati
 
 All development and lifecycle tasks are orchestrated through `bun run <script>`:
 
-| Script               | Command                                                                                        | Purpose                                                      |
-| :------------------- | :--------------------------------------------------------------------------------------------- | :----------------------------------------------------------- |
-| `dev`                | `vp dev`                                                                                       | Start the local Vite-Plus development server with HMR        |
-| `build`              | `vp build`                                                                                     | Build production frontend static assets to `dist/`           |
-| `preview`            | `vp preview`                                                                                   | Preview production build locally                             |
-| `lint`               | `vp lint . --fix`                                                                              | Lint codebase with Oxlint rules and auto-apply fixes         |
-| `format`             | `vp fmt src/`                                                                                  | Format source code using Oxfmt                               |
-| `test:unit`          | `vp test`                                                                                      | Run unit tests using Vitest                                  |
-| `detect`             | `gitleaks git --verbose`                                                                       | Scan commit history for sensitive credentials and tokens     |
-| `clean`              | `(cd src-tauri && cargo clean)`                                                                | Remove compiled Rust artifacts in `src-tauri/target/`        |
-| `tauri`              | `tauri`                                                                                        | Invoke Tauri CLI directly                                    |
-| `tauri:dev`          | `tauri dev`                                                                                    | Launch Tauri desktop app in dev mode using `.env.native`     |
-| `tauri:build`        | `tauri build`                                                                                  | Build production desktop packages and updater bundles        |
-| `tauri:dev:mobile`   | `tauri android dev`                                                                            | Launch Tauri on connected Android device / emulator          |
-| `tauri:build:mobile` | `tauri android build`                                                                          | Build release Android APK and AAB bundles                    |
-| `docker:build`       | `docker build --build-arg VERSION=dev --build-arg BUILD_TIME=now -t vuetemplate:dev .`         | Build production multi-stage Docker container                |
-| `docker:start`       | `docker run --detach --name vuetemplate-dev --env-file .env.prod -p 2000:8080 vuetemplate:dev` | Run Docker container exposing port `2000` (mapped to `8080`) |
-| `prepare`            | `husky`                                                                                        | Install and configure Husky git hooks                        |
+| Script               | Command                                                                                  | Purpose                                                      |
+| :------------------- | :--------------------------------------------------------------------------------------- | :----------------------------------------------------------- |
+| `dev`                | `vp dev`                                                                                 | Start the local Vite-Plus development server with HMR        |
+| `build`              | `vp build`                                                                               | Build production frontend static assets to `dist/`           |
+| `preview`            | `vp preview`                                                                             | Preview production build locally                             |
+| `lint`               | `vp lint . --fix`                                                                        | Lint codebase with Oxlint rules and auto-apply fixes         |
+| `format`             | `vp fmt src/`                                                                            | Format source code using Oxfmt                               |
+| `test:unit`          | `vp test`                                                                                | Run unit tests using Vitest                                  |
+| `detect`             | `gitleaks git --verbose`                                                                 | Scan commit history for sensitive credentials and tokens     |
+| `clean`              | `(cd src-tauri && cargo clean)`                                                          | Remove compiled Rust artifacts in `src-tauri/target/`        |
+| `tauri`              | `tauri`                                                                                  | Invoke Tauri CLI directly                                    |
+| `tauri:dev`          | `tauri dev`                                                                              | Launch Tauri desktop app in dev mode using `.env.native`     |
+| `tauri:build`        | `tauri build`                                                                            | Build production desktop packages and updater bundles        |
+| `tauri:dev:mobile`   | `tauri android dev`                                                                      | Launch Tauri on connected Android device / emulator          |
+| `tauri:build:mobile` | `tauri android build`                                                                    | Build release Android APK and AAB bundles                    |
+| `docker:build`       | `docker build --build-arg VERSION=dev --build-arg BUILD_TIME=now -t mwap-web:dev .`      | Build production multi-stage Docker container                |
+| `docker:start`       | `docker run --detach --name mwap-web-dev --env-file .env.prod -p 2000:8080 mwap-web:dev` | Run Docker container exposing port `2000` (mapped to `8080`) |
+| `prepare`            | `husky`                                                                                  | Install and configure Husky git hooks                        |
 
 ---
 
@@ -130,7 +130,7 @@ All development and lifecycle tasks are orchestrated through `bun run <script>`:
 
 ### 1. `useDarkMode` Composable
 
-Located at [`src/composables/useDarkMode.ts`](file:///d:/Projects/Public/vuetemplate/code/src/composables/useDarkMode.ts), this composable uses VueUse's `useDark` and `useToggle` to synchronize user theme preference with Tailwind CSS v4.
+Located at [`src/composables/useDarkMode.ts`](src/composables/useDarkMode.ts), this composable uses VueUse's `useDark` and `useToggle` to synchronize user theme preference with Tailwind CSS v4.
 
 ```vue
 <script setup lang="ts">
@@ -146,13 +146,13 @@ const { isDark, toggleDark } = useDarkMode()
 </template>
 ```
 
-- **CSS Configuration**: [`src/style.css`](file:///d:/Projects/Public/vuetemplate/code/src/style.css) defines `@custom-variant dark (&:where(.dark, .dark *));`, allowing classes like `dark:bg-slate-900` to respond instantly when `.dark` is added to `<html>`.
+- **CSS Configuration**: [`src/style.css`](src/style.css) defines `@custom-variant dark (&:where(.dark, .dark *));`, allowing classes like `dark:bg-slate-900` to respond instantly when `.dark` is added to `<html>`.
 
 ---
 
 ### 2. `useAppNotification` Composable
 
-Located at [`src/composables/useAppNotification.ts`](file:///d:/Projects/Public/vuetemplate/code/src/composables/useAppNotification.ts), this composable uses VueUse's [`useWebNotification`](https://vueuse.org/core/useWebNotification/#usewebnotification) to handle permissions and trigger system notifications.
+Located at [`src/composables/useAppNotification.ts`](src/composables/useAppNotification.ts), this composable uses VueUse's [`useWebNotification`](https://vueuse.org/core/useWebNotification/#usewebnotification) to handle permissions and trigger system notifications.
 
 ```vue
 <script setup lang="ts">
@@ -162,7 +162,7 @@ const { isSupported, sendNotification } = useAppNotification()
 
 const triggerNotice = () => {
   sendNotification({
-    title: 'VueTemplate',
+    title: 'MWap Web',
     body: 'Notification dispatched successfully!',
   })
 }
@@ -186,7 +186,7 @@ const triggerNotice = () => {
 
 ### 3. `useGoogleAnalytics` Composable
 
-Located at [`src/composables/useGoogleAnalytics.ts`](file:///d:/Projects/Public/vuetemplate/code/src/composables/useGoogleAnalytics.ts), this composable uses VueUse's [`useScriptTag`](https://vueuse.org/core/useScriptTag/#usescripttag) to inject Google Analytics (`gtag.js`) asynchronously.
+Located at [`src/composables/useGoogleAnalytics.ts`](src/composables/useGoogleAnalytics.ts), this composable uses VueUse's [`useScriptTag`](https://vueuse.org/core/useScriptTag/#usescripttag) to inject Google Analytics (`gtag.js`) asynchronously.
 
 ```vue
 <script setup lang="ts">
@@ -214,7 +214,7 @@ const onClick = () => {
 
 ### 4. `useAppUpdater` Composable
 
-Located at [`src/composables/useAppUpdater.ts`](file:///d:/Projects/Public/vuetemplate/code/src/composables/useAppUpdater.ts), this composable wraps `@tauri-apps/plugin-updater` and `@tauri-apps/plugin-process` to provide reactive desktop update management.
+Located at [`src/composables/useAppUpdater.ts`](src/composables/useAppUpdater.ts), this composable wraps `@tauri-apps/plugin-updater` and `@tauri-apps/plugin-process` to provide reactive desktop update management.
 
 ```vue
 <script setup lang="ts">
@@ -283,7 +283,7 @@ Tauri requires cryptographic signing to ensure updater artifacts have not been t
    ```bash
    bun x tauri signer generate -w ./src-tauri/app-sign.key
    ```
-2. **Configure Public Key in [`src-tauri/tauri.conf.json`](file:///d:/Projects/Public/vuetemplate/code/src-tauri/tauri.conf.json):**
+2. **Configure Public Key in [`src-tauri/tauri.conf.json`](src-tauri/tauri.conf.json):**
    ```json
    {
      "bundle": {
@@ -303,7 +303,7 @@ Tauri requires cryptographic signing to ensure updater artifacts have not been t
 
 ### 2. Android Keystore Signing
 
-Android release builds require a Java Keystore for APK and AAB signing. The signing logic is preconfigured in [`src-tauri/gen/android/app/build.gradle.kts`](file:///d:/Projects/Public/vuetemplate/code/src-tauri/gen/android/app/build.gradle.kts).
+Android release builds require a Java Keystore for APK and AAB signing. The signing logic is preconfigured in [`src-tauri/gen/android/app/build.gradle.kts`](src-tauri/gen/android/app/build.gradle.kts).
 
 1. **Generate Keystore:**
    ```bash
@@ -362,7 +362,7 @@ bun run docker:start
 
 - **Builder Stage**: `oven/bun:1-alpine` runs `bun install --frozen-lockfile` and `bun run build`.
 - **Runner Stage**: `nginx:alpine` serves static files from `/usr/share/nginx/html`.
-- **Nginx Config**: Configured in [`nginx.conf`](file:///d:/Projects/Public/vuetemplate/code/nginx.conf) to listen on port `8080`, with gzip compression enabled and client-side SPA routing (`try_files $uri $uri/index.html =404;`).
+- **Nginx Config**: Configured in [`nginx.conf`](nginx.conf) to listen on port `8080`, with gzip compression enabled and client-side SPA routing (`try_files $uri $uri/index.html =404;`).
 
 ---
 
@@ -385,7 +385,7 @@ The repository uses [Husky](https://typicode.github.io/husky/) with automated pr
 
 ### Code Style & Formatting
 
-Linter and formatter configurations are managed via Vite-Plus in [`vite.config.ts`](file:///d:/Projects/Public/vuetemplate/code/vite.config.ts):
+Linter and formatter configurations are managed via Vite-Plus in [`vite.config.ts`](vite.config.ts):
 
 - Single quotes (`singleQuote: true`)
 - No semicolons (`semi: false`)
@@ -397,10 +397,10 @@ Linter and formatter configurations are managed via Vite-Plus in [`vite.config.t
 
 ## License
 
-Published under the [MIT](https://github.com/shba007/vuetemplate/blob/main/LICENSE) license.
+Published under the [MIT](https://github.com/shba007/mwap-web/blob/main/LICENSE) license.
 
 <br>
 
-<a href="https://github.com/shba007/vuetemplate/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=shba007/vuetemplate" alt="Contributors" />
+<a href="https://github.com/shba007/mwap-web/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=shba007/mwap-web" alt="Contributors" />
 </a>
