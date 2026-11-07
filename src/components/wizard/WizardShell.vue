@@ -35,7 +35,9 @@ function leave() {
 </script>
 
 <template>
-  <div class="grid min-h-screen grid-cols-[minmax(0,620px)_1fr] gap-x-12 px-11 py-9">
+  <div
+    class="grid min-h-screen grid-cols-1 gap-x-12 gap-y-8 px-6 py-9 xl:grid-cols-[minmax(0,620px)_1fr] xl:px-11"
+  >
     <div class="flex h-[calc(100vh-72px)] flex-col">
       <header class="flex items-center justify-between">
         <RouterLink to="/" class="flex items-center gap-2">

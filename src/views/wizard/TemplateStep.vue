@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import IconCheck from '~icons/lucide/check'
 
 import UiButton from '@/components/ui/UiButton.vue'
+import TemplateThumb from '@/components/wizard/TemplateThumb.vue'
 import SitePreview from '@/components/wizard/SitePreview.vue'
 import WizardShell from '@/components/wizard/WizardShell.vue'
 import { categoriesOf } from '@/domain/templates'
@@ -72,18 +73,9 @@ const tpl = computed(() => store.backendTemplate)
             :aria-pressed="store.templateId === t.id"
             @click="store.selectTemplate(t.id)"
           >
-            <span class="flex h-[148px] items-center justify-center rounded-md bg-divider">
-              <span class="flex h-[88px] w-[128px] flex-col gap-1.5 rounded-sm bg-beige p-2">
-                <i class="h-1.5 w-12 rounded-sm bg-midnight" />
-                <i class="h-1.5 w-16 rounded-sm bg-electric" />
-                <span class="mt-1 grid flex-1 grid-cols-3 gap-1">
-                  <i v-for="n in 3" :key="n" class="rounded-sm bg-electric-soft" />
-                </span>
-              </span>
-            </span>
+            <TemplateThumb :template-id="t.id" :label="t.label" />
             <span class="text-sm font-medium">{{ t.label }}</span>
             <span class="text-xs text-text-2">{{ t.category }}</span>
-            <span v-if="t.mock" class="text-xs text-warning">Preview only</span>
             <span
               v-if="store.templateId === t.id"
               class="absolute top-5 right-5 flex size-5 items-center justify-center rounded-full bg-electric"
