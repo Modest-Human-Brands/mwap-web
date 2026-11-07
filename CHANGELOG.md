@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.5
+
+[compare changes](https://github.com/Modest-Human-Brands/mwap-web/compare/v0.0.4...v0.0.5)
+
+### 🚀 Enhancements
+
+- Add psychiatrist editorial template and enhance content management ([438a004](https://github.com/Modest-Human-Brands/mwap-web/commit/438a004))
+
+### ❤️ Contributors
+
+- Shirsendu Bairagi ([@shba007](https://github.com/shba007))
+
 ## v0.0.4
 
 [compare changes](https://github.com/Modest-Human-Brands/mwap-web/compare/v0.0.3...v0.0.4)
