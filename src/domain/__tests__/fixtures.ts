@@ -21,6 +21,7 @@ export const site: Site = {
   brand,
   data: {
     seo: { ogImage: 'https://example.com/og.png' },
+    contact: { email: 'hi@northlight.example.com' },
     pages: {
       home: {
         title: 'Home',
@@ -48,4 +49,32 @@ export const template: Template = {
   description: 'Studio template',
   schema: {},
   sample: site.data,
+}
+
+export const editorialTemplate: Template = {
+  id: 'psychiatrist-editorial',
+  label: 'Editorial',
+  shortLabel: 'Editorial',
+  category: 'Psychiatrists',
+  description: 'Two-page clinic template',
+  schema: {},
+  sample: {
+    seo: { ogImage: 'https://example.com/og.png' },
+    contact: { email: 'hello@clinic.example.com', phone: '+91 1' },
+    pages: {
+      home: {
+        title: 'Home',
+        hero: { enabled: true, titleLines: ['Care that', 'listens'], tagline: 'A calm clinic' },
+        statement: {
+          enabled: true,
+          stats: [
+            { value: '12', label: 'Years' },
+            { value: '3K', label: 'Patients' },
+          ],
+        },
+        appointment: { enabled: true, hours: [{ days: 'Mon - Fri', time: '9 - 5' }] },
+      },
+      about: { title: 'About' },
+    },
+  },
 }

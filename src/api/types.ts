@@ -26,6 +26,8 @@ export interface Site {
   brand: Brand
   data: SiteData
   domains?: string[]
+  /** GA4 measurement id (G-XXXX); the site reports only to its own property. */
+  googleAnalyticsId?: string
   updatedAt?: string
 }
 
@@ -62,6 +64,7 @@ export interface SiteInput {
   brand: Brand
   data: SiteData
   domains?: string[]
+  googleAnalyticsId?: string
 }
 
 export interface PreviewInput {

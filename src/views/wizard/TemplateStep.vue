@@ -6,7 +6,7 @@ import IconCheck from '~icons/lucide/check'
 import UiButton from '@/components/ui/UiButton.vue'
 import SitePreview from '@/components/wizard/SitePreview.vue'
 import WizardShell from '@/components/wizard/WizardShell.vue'
-import { TEMPLATE_CATEGORIES } from '@/domain/templates'
+import { categoriesOf } from '@/domain/templates'
 import { buildBrand, defaultsFromTemplate, siteAddress, templatePages } from '@/domain/wizard'
 import { useWizardStore } from '@/stores/wizard'
 
@@ -18,18 +18,14 @@ onMounted(() => store.loadCatalog())
 
 const filters = computed(() => [
   { label: 'All', count: store.catalog.length },
-  ...TEMPLATE_CATEGORIES.map((c) => ({
-    label: c === 'Brand site' ? 'Brand sites' : c === 'Portfolio' ? 'Portfolios' : 'Landing pages',
-    key: c,
+  ...categoriesOf(store.catalog).map((c) => ({
+    label: c,
     count: store.catalog.filter((t) => t.category === c).length,
   })),
 ])
-const visible = computed(() => {
-  const key = filters.value.find((f) => f.label === filter.value)
-  return !key || !('key' in key)
-    ? store.catalog
-    : store.catalog.filter((t) => t.category === key.key)
-})
+const visible = computed(() =>
+  filter.value === 'All' ? store.catalog : store.catalog.filter((t) => t.category === filter.value),
+)
 
 const tpl = computed(() => store.backendTemplate)
 </script>

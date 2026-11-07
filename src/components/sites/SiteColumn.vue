@@ -5,7 +5,7 @@ import { STATUS_DOT, STATUS_LABEL, type SiteCard, type SiteStatus } from '@/doma
 import SiteCardItem from './SiteCardItem.vue'
 
 defineProps<{ status: SiteStatus; sites: SiteCard[] }>()
-const emit = defineEmits<{ archive: [site: SiteCard] }>()
+const emit = defineEmits<{ archive: [site: SiteCard]; delete: [site: SiteCard] }>()
 </script>
 
 <template>
@@ -22,6 +22,7 @@ const emit = defineEmits<{ archive: [site: SiteCard] }>()
       :key="site.slug"
       :site="site"
       @archive="emit('archive', $event)"
+      @delete="emit('delete', $event)"
     />
     <p
       v-if="!sites.length"

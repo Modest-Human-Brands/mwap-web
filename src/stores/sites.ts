@@ -44,5 +44,9 @@ export const useSitesStore = defineStore('sites', () => {
     site.status = status
   }
 
-  return { sites, loading, loaded, error, search, filtered, columns, load, setStatus }
+  function remove(slug: string) {
+    sites.value = sites.value.filter((s) => s.slug !== slug)
+  }
+
+  return { sites, loading, loaded, error, search, filtered, columns, load, setStatus, remove }
 })

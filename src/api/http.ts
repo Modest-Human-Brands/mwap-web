@@ -20,10 +20,10 @@ export class ApiError extends Error {
 }
 
 export interface RequestOptions {
-  method?: 'GET' | 'POST' | 'PUT'
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
   query?: Record<string, string | number | undefined>
   body?: unknown
-  /** Sends x-api-key and x-org-id (create and replace site). */
+  /** Sends x-api-key and x-org-id (create, replace and delete site). */
   write?: boolean
   signal?: AbortSignal
 }
@@ -47,7 +47,8 @@ export async function request<T>(path: string, opts: RequestOptions = {}): Promi
     body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
     signal: opts.signal,
   })
-  const payload: unknown = await res.json().catch(() => null)
+  // DELETE answers 204 with no body.
+  const payload: unknown = res.status === 204 ? null : await res.json().catch(() => null)
 
   if (!res.ok) {
     const err = (payload ?? {}) as { message?: string; data?: { errors?: FieldError[] } }

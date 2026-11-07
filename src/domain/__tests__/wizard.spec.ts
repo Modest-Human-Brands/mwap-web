@@ -11,7 +11,7 @@ import {
   templatePages,
   validateDetails,
 } from '../wizard'
-import { site, template } from './fixtures'
+import { editorialTemplate, site, template } from './fixtures'
 
 describe('slugify', () => {
   it('lowercases and joins words with dashes', () => {
@@ -28,28 +28,31 @@ describe('validateDetails', () => {
   const valid = detailsFromSite(site)
 
   it('accepts valid details', () => {
-    expect(validateDetails(valid)).toEqual({})
+    expect(validateDetails(valid, 'contact-sheet')).toEqual({})
   })
 
   it('flags an empty name, a bad slug and an empty headline', () => {
-    const errors = validateDetails({ ...valid, name: ' ', slug: 'Bad Slug', headline: '' })
+    const errors = validateDetails(
+      { ...valid, name: ' ', slug: 'Bad Slug', headline: '' },
+      'contact-sheet',
+    )
     expect(Object.keys(errors).sort()).toEqual(['headline', 'name', 'slug'])
   })
 
   it('flags missing or blank measurements and stats', () => {
-    expect(validateDetails({ ...valid, measurements: [] }).measurements).toBe(
-      'Add at least one measurement',
-    )
+    expect(validateDetails({ ...valid, rows: [] }, 'contact-sheet').rows).toBe('Add at least 1')
     expect(
-      validateDetails({ ...valid, measurements: [{ label: 'Height', value: ' ' }] }).measurements,
-    ).toBe('Fill in every measurement')
-    expect(validateDetails({ ...valid, stats: [{ value: '', label: 'x' }] }).stats).toBe(
-      'Fill in every stat',
-    )
+      validateDetails({ ...valid, rows: [{ label: 'Height', value: ' ' }] }, 'contact-sheet').rows,
+    ).toBe('Fill in every row')
+    expect(
+      validateDetails({ ...valid, stats: [{ value: '', label: 'x' }] }, 'contact-sheet').stats,
+    ).toBe('Fill in every stat')
   })
 
   it('flags a missing slug', () => {
-    expect(validateDetails({ ...valid, slug: '' }).slug).toBe('Enter a site address')
+    expect(validateDetails({ ...valid, slug: '' }, 'contact-sheet').slug).toBe(
+      'Enter a site address',
+    )
   })
 })
 
@@ -61,7 +64,11 @@ describe('fieldForServiceError', () => {
     ['brand.colors.primary', 'accent'],
     ['data.pages.home.cover.title', 'headline'],
     ['data.pages.home.cover.tagline', 'bio'],
-    ['data.pages.home.compCard.measurements.0.value', 'measurements'],
+    ['data.pages.home.compCard.measurements.0.value', 'rows'],
+    ['data.pages.home.appointment.hours.0.time', 'rows'],
+    ['data.pages.home.hero.titleLines', 'headline'],
+    ['data.contact.email', 'email'],
+    ['googleAnalyticsId', 'googleAnalyticsId'],
     ['data.pages.home.compCard.stats.1.label', 'stats'],
     ['something.else', undefined],
   ])('maps %s to %s', (field, expected) => {
@@ -79,7 +86,7 @@ describe('template mapping', () => {
       accent: '#6C3BFF',
       stats: [{ value: '120K', label: 'Followers' }],
     })
-    expect(defaultsFromTemplate(template).measurements).toHaveLength(2)
+    expect(defaultsFromTemplate(template).rows).toHaveLength(2)
   })
 
   it('lists the page keys', () => {
@@ -91,7 +98,7 @@ describe('template mapping', () => {
     const input = buildSiteInput(template, {
       ...defaultsFromTemplate(template),
       headline: 'Hi',
-      measurements: [{ label: 'Height', value: '180 cm' }],
+      rows: [{ label: 'Height', value: '180 cm' }],
       stats: [],
     })
     expect(input.templateId).toBe('contact-sheet')
@@ -110,6 +117,60 @@ describe('template mapping', () => {
         },
       },
     })
+  })
+})
+
+describe('psychiatrist-editorial', () => {
+  const defaults = { ...defaultsFromTemplate(editorialTemplate), name: 'Dr Rao', slug: 'dr-rao' }
+
+  it('reads title lines, hours and stats from the sample', () => {
+    expect(defaults).toMatchObject({
+      headline: 'Care that\nlistens',
+      bio: 'A calm clinic',
+      email: 'hello@clinic.example.com',
+      phone: '+91 1',
+      rows: [{ label: 'Mon - Fri', value: '9 - 5' }],
+    })
+    expect(defaults.stats).toHaveLength(2)
+    expect(templatePages(editorialTemplate)).toEqual(['home', 'about'])
+  })
+
+  it('writes the headline back as title lines and keeps the other page', () => {
+    const input = buildSiteInput(editorialTemplate, {
+      ...defaults,
+      headline: ' One \n\n Two ',
+      phone: '',
+      googleAnalyticsId: 'G-ABC123',
+    })
+    expect(input.googleAnalyticsId).toBe('G-ABC123')
+    expect(input.data).toMatchObject({
+      contact: { email: 'hello@clinic.example.com' },
+      pages: { about: { title: 'About' }, home: { hero: { titleLines: ['One', 'Two'] } } },
+    })
+    expect(JSON.stringify(input.data.contact)).not.toContain('phone')
+  })
+
+  it('requires 2 stats, an email and at most 3 title lines', () => {
+    const errors = validateDetails(
+      { ...defaults, stats: [defaults.stats[0]!], email: 'nope', headline: 'a\nb\nc\nd' },
+      'psychiatrist-editorial',
+    )
+    expect(Object.keys(errors).sort()).toEqual(['email', 'headline', 'stats'])
+  })
+
+  it('validates the Google Analytics id only when given', () => {
+    const id = 'psychiatrist-editorial'
+    expect(validateDetails({ ...defaults, googleAnalyticsId: '' }, id)).toEqual({})
+    expect(
+      validateDetails({ ...defaults, googleAnalyticsId: 'UA-1' }, id).googleAnalyticsId,
+    ).toMatch(/G-/)
+  })
+})
+
+describe('an unknown template', () => {
+  it('only validates name, address and analytics id', () => {
+    const d = { ...defaultsFromTemplate(template), name: 'x', slug: 'x', headline: '', email: '' }
+    expect(validateDetails(d, 'something-new')).toEqual({})
   })
 })
 
@@ -136,6 +197,7 @@ describe('applyDetails', () => {
       },
     })
     expect(next.domains).toEqual(['northlight.example.test'])
+    expect(next.data.contact).toEqual({ email: 'hi@northlight.example.com' })
   })
 
   it('does not mutate the stored site', () => {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 
+import DeleteSiteDialog from '@/components/sites/DeleteSiteDialog.vue'
 import SiteColumn from '@/components/sites/SiteColumn.vue'
 import SitesEmpty from '@/components/sites/SitesEmpty.vue'
 import SitesSkeleton from '@/components/sites/SitesSkeleton.vue'
@@ -11,6 +12,7 @@ import { useSitesStore } from '@/stores/sites'
 
 const store = useSitesStore()
 const archiving = ref<SiteCard>()
+const deleting = ref<SiteCard>()
 
 onMounted(() => store.load())
 
@@ -50,6 +52,7 @@ function confirmArchive() {
         :status="col.status"
         :sites="col.sites"
         @archive="archiving = $event"
+        @delete="deleting = $event"
       />
     </div>
 
@@ -64,5 +67,13 @@ function confirmArchive() {
         <UiButton @click="confirmArchive">Archive</UiButton>
       </template>
     </UiDialog>
+
+    <DeleteSiteDialog
+      v-if="deleting"
+      :name="deleting.name"
+      :slug="deleting.slug"
+      @close="deleting = undefined"
+      @deleted="(store.remove(deleting.slug), (deleting = undefined))"
+    />
   </main>
 </template>

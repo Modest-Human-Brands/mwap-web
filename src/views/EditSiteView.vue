@@ -52,7 +52,7 @@ const back = () => router.push({ name: 'site', params: { slug } })
 
 async function save() {
   if (!site.value || !details.value) return
-  errors.value = validateDetails(details.value)
+  errors.value = validateDetails(details.value, site.value?.templateId ?? '')
   if (Object.keys(errors.value).length) return
   saving.value = true
   submitError.value = ''
@@ -98,6 +98,7 @@ async function save() {
     <template v-else>
       <p v-if="submitError" role="alert" class="mb-4 text-sm text-error">{{ submitError }}</p>
       <DetailsForm
+        :template-id="site?.templateId ?? ''"
         :details="details"
         :errors="errors"
         slug-locked

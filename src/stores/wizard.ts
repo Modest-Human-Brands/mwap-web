@@ -37,6 +37,8 @@ export const useWizardStore = defineStore('wizard', () => {
   /** Full backend templates (schema + sample), by backend id. */
   const backend = ref<Record<string, Template>>({})
   const details = ref<SiteDetails>()
+  /** Backend template the current details were built for. */
+  const detailsFor = ref('')
   const slugTouched = ref(false)
   const errors = ref<DetailsErrors>({})
   const submitError = ref('')
@@ -84,9 +86,25 @@ export const useWizardStore = defineStore('wizard', () => {
     if (!picked) return
     const tpl = await ensureBackend(picked.backendId)
     if (templateId.value !== id || !details.value) {
+      const prev = details.value
+      const sameLayout = prev && detailsFor.value === tpl.id
       templateId.value = id
-      // Keep what the user typed when they only switch template.
-      details.value ??= defaultsFromTemplate(tpl)
+      detailsFor.value = tpl.id
+      if (!prev) details.value = defaultsFromTemplate(tpl)
+      else if (!sameLayout) {
+        // A different template has different content: start its content from its own sample but
+        // keep the name, address and brand the user already typed.
+        const { name, slug, logoUrl, accent, fontFamily, googleAnalyticsId } = prev
+        details.value = {
+          ...defaultsFromTemplate(tpl),
+          name,
+          slug,
+          logoUrl,
+          accent,
+          fontFamily,
+          googleAnalyticsId,
+        }
+      }
     }
   }
 
@@ -103,7 +121,8 @@ export const useWizardStore = defineStore('wizard', () => {
   }
 
   function validate() {
-    errors.value = details.value ? validateDetails(details.value) : {}
+    const id = backendTemplate.value?.id
+    errors.value = details.value && id ? validateDetails(details.value, id) : {}
     return Object.keys(errors.value).length === 0
   }
 
@@ -153,6 +172,7 @@ export const useWizardStore = defineStore('wizard', () => {
   function reset() {
     templateId.value = ''
     details.value = undefined
+    detailsFor.value = ''
     slugTouched.value = false
     errors.value = {}
     submitError.value = ''

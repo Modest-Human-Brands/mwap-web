@@ -43,3 +43,10 @@ export function setSiteMeta(slug: string, patch: Partial<SiteMeta>, name = slug)
   store = { ...store, [slug]: { ...getSiteMeta(slug, name), ...patch } }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(store))
 }
+
+/** A deleted site leaves no mock data behind. */
+export function clearSiteMeta(slug: string) {
+  const { [slug]: _gone, ...rest } = store
+  store = rest
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(store))
+}

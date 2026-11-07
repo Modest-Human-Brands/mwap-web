@@ -16,7 +16,7 @@ import {
 } from '@/domain/site'
 
 const props = defineProps<{ site: SiteCard }>()
-const emit = defineEmits<{ archive: [site: SiteCard] }>()
+const emit = defineEmits<{ archive: [site: SiteCard]; delete: [site: SiteCard] }>()
 
 const router = useRouter()
 const open = (hash = '') => router.push({ name: 'site', params: { slug: props.site.slug }, hash })
@@ -29,6 +29,7 @@ const menu: MenuItem[] = [
   ...(props.site.status === 'archived'
     ? []
     : [{ label: 'Archive', onSelect: () => emit('archive', props.site) }]),
+  { label: 'Delete', onSelect: () => emit('delete', props.site) },
 ]
 </script>
 

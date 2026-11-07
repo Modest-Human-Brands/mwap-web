@@ -1,35 +1,22 @@
 import type { Brand, Site, SiteData, SiteInput, Template } from '@/api'
 import { config } from '@/config'
+import { profileFor, type Content } from './content'
 
-export interface SiteDetails {
+export type { Row, Stat } from './content'
+
+export interface SiteDetails extends Content {
   name: string
   slug: string
   logoUrl: string
   accent: string
   fontFamily: string
-  /** Cover title (`pages.home.cover.title`). */
-  headline: string
-  /** Cover tagline (`pages.home.cover.tagline`). */
-  bio: string
-  /** Comp card stats, at most 3 (`pages.home.compCard.stats`). */
-  stats: Stat[]
-  /** Comp card measurements, 1 to 10 (`pages.home.compCard.measurements`). */
-  measurements: Measurement[]
+  /** GA4 measurement id, optional. */
+  googleAnalyticsId: string
 }
-
-export interface Stat {
-  value: string
-  label: string
-}
-export interface Measurement {
-  label: string
-  value: string
-}
-
-export const MAX_STATS = 3
-export const MAX_MEASUREMENTS = 10
 
 export const SLUG_PATTERN = /^[a-z0-9-]+$/
+export const GA_PATTERN = /^G-[A-Z0-9]{4,}$/
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
 export const slugify = (value: string) =>
   value
@@ -48,47 +35,6 @@ export function siteAddress(slug: string) {
 
 type Rec = Record<string, unknown>
 const rec = (v: unknown): Rec => (v && typeof v === 'object' ? (v as Rec) : {})
-
-const text = (v: unknown) => (typeof v === 'string' ? v : '')
-const list = <T extends Rec>(v: unknown, keys: (keyof T & string)[]): T[] =>
-  Array.isArray(v)
-    ? v.map((item) => Object.fromEntries(keys.map((k) => [k, text(rec(item)[k])])) as T)
-    : []
-
-/** The editable content of a `contact-sheet` payload: cover text plus the comp card lists. */
-function readContent(data: SiteData) {
-  const home = rec(rec(data.pages).home)
-  const cover = rec(home.cover)
-  const compCard = rec(home.compCard)
-  return {
-    headline: text(cover.title),
-    bio: text(cover.tagline),
-    stats: list<Rec & Stat>(compCard.stats, ['value', 'label']),
-    measurements: list<Rec & Measurement>(compCard.measurements, ['label', 'value']),
-  }
-}
-
-/** The edited content laid over a payload; everything else in it is kept as is. */
-function writeContent(data: SiteData, d: SiteDetails): SiteData {
-  const pages = rec(data.pages)
-  const home = rec(pages.home)
-  const compCard = rec(home.compCard)
-  return {
-    ...data,
-    pages: {
-      ...pages,
-      home: {
-        ...home,
-        cover: { ...rec(home.cover), title: d.headline, tagline: d.bio },
-        compCard: {
-          ...compCard,
-          stats: d.stats.map((s) => ({ ...s })),
-          measurements: d.measurements.map((m) => ({ ...m })),
-        },
-      },
-    },
-  }
-}
 
 /** The service has no brand sample, so new sites start from this neutral one. */
 export const DEFAULT_BRAND: Brand = {
@@ -114,11 +60,12 @@ export function defaultsFromTemplate(template: Template): SiteDetails {
     logoUrl: brand.logoUrl,
     accent: brand.colors.accent,
     fontFamily: brand.fontFamily,
-    ...readContent(template.sample),
+    googleAnalyticsId: '',
+    ...profileFor(template.id).read(template.sample),
   }
 }
 
-/** Page keys of the template (home…), for the preview rail. */
+/** Page keys of the template (home, about…), for the preview rail. */
 export const templatePages = (template: Template) => Object.keys(rec(template.sample.pages))
 
 export function buildBrand(_template: Template, d: SiteDetails): Brand {
@@ -135,7 +82,7 @@ export function buildBrand(_template: Template, d: SiteDetails): Brand {
 
 /** The template sample with the form's content laid over it, so the payload is always complete. */
 export function buildData(template: Template, d: SiteDetails): SiteData {
-  return writeContent(template.sample, d)
+  return profileFor(template.id).write(template.sample, d)
 }
 
 export function buildSiteInput(template: Template, d: SiteDetails): SiteInput {
@@ -144,23 +91,36 @@ export function buildSiteInput(template: Template, d: SiteDetails): SiteInput {
     templateId: template.id,
     brand: buildBrand(template, d),
     data: buildData(template, d),
+    ...(d.googleAnalyticsId.trim() ? { googleAnalyticsId: d.googleAnalyticsId.trim() } : {}),
     ...(config.siteDomain ? { domains: [`${d.slug}.${config.siteDomain}`] } : {}),
   }
 }
 
 export type DetailsErrors = Partial<Record<keyof SiteDetails, string>>
 
-export function validateDetails(d: SiteDetails): DetailsErrors {
+export function validateDetails(d: SiteDetails, templateId: string): DetailsErrors {
+  const p = profileFor(templateId)
   const errors: DetailsErrors = {}
   if (!d.name.trim()) errors.name = 'Enter a site name'
   if (!d.slug) errors.slug = 'Enter a site address'
   else if (!SLUG_PATTERN.test(d.slug)) errors.slug = 'Use lowercase letters, numbers and dashes'
+  if (d.googleAnalyticsId.trim() && !GA_PATTERN.test(d.googleAnalyticsId.trim()))
+    errors.googleAnalyticsId = 'Use a GA4 measurement id like G-ABC123XYZ'
+  if (!p.supported) return errors
+
   if (!d.headline.trim()) errors.headline = 'Enter a headline'
-  if (!d.bio.trim()) errors.bio = 'Enter a short bio'
-  if (!d.measurements.length) errors.measurements = 'Add at least one measurement'
-  else if (d.measurements.some((m) => !m.label.trim() || !m.value.trim()))
-    errors.measurements = 'Fill in every measurement'
-  if (d.stats.some((st) => !st.label.trim() || !st.value.trim()))
+  else if (
+    p.headlineMultiline &&
+    d.headline.split('\n').filter((l) => l.trim()).length > p.headlineMaxLines
+  )
+    errors.headline = `Use at most ${p.headlineMaxLines} lines`
+  if (!d.bio.trim()) errors.bio = `Enter a ${p.bioLabel.toLowerCase()}`
+  if (!EMAIL_PATTERN.test(d.email.trim())) errors.email = 'Enter a valid contact email'
+
+  if (d.rows.length < p.rowsMin) errors.rows = `Add at least ${p.rowsMin}`
+  else if (d.rows.some((r) => !r.label.trim() || !r.value.trim())) errors.rows = 'Fill in every row'
+  if (d.stats.length < p.statsMin) errors.stats = `Add at least ${p.statsMin}`
+  else if (d.stats.some((s) => !s.label.trim() || !s.value.trim()))
     errors.stats = 'Fill in every stat'
   return errors
 }
@@ -172,10 +132,13 @@ export function fieldForServiceError(field: string): keyof SiteDetails | undefin
   if (field === 'brand.logoUrl') return 'logoUrl'
   if (field === 'brand.fontFamily') return 'fontFamily'
   if (field.startsWith('brand.colors')) return 'accent'
-  if (field.endsWith('cover.title')) return 'headline'
-  if (field.endsWith('cover.tagline')) return 'bio'
-  if (field.includes('compCard.measurements')) return 'measurements'
-  if (field.includes('compCard.stats')) return 'stats'
+  if (field === 'googleAnalyticsId') return 'googleAnalyticsId'
+  if (field.endsWith('contact.email')) return 'email'
+  if (field.endsWith('contact.phone')) return 'phone'
+  if (field.endsWith('cover.title') || field.includes('hero.titleLines')) return 'headline'
+  if (field.endsWith('cover.tagline') || field.endsWith('hero.tagline')) return 'bio'
+  if (field.includes('compCard.measurements') || field.includes('appointment.hours')) return 'rows'
+  if (field.includes('compCard.stats') || field.includes('statement.stats')) return 'stats'
   return undefined
 }
 
@@ -187,7 +150,8 @@ export function detailsFromSite(site: Site): SiteDetails {
     logoUrl: site.brand.logoUrl,
     accent: site.brand.colors.accent,
     fontFamily: site.brand.fontFamily,
-    ...readContent(site.data),
+    googleAnalyticsId: site.googleAnalyticsId ?? '',
+    ...profileFor(site.templateId).read(site.data),
   }
 }
 
@@ -205,7 +169,8 @@ export function applyDetails(site: Site, d: SiteDetails): SiteInput {
       fontFamily: d.fontFamily,
       colors: { ...site.brand.colors, primary: d.accent, accent: d.accent },
     },
-    data: writeContent(site.data, d),
+    data: profileFor(site.templateId).write(site.data, d),
+    ...(d.googleAnalyticsId.trim() ? { googleAnalyticsId: d.googleAnalyticsId.trim() } : {}),
     ...(site.domains?.length ? { domains: site.domains } : {}),
   }
 }

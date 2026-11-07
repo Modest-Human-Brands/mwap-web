@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test'
 
-import { buildCatalog, categoryFor } from '../templates'
+import { buildCatalog, categoriesOf } from '../templates'
 
 const real = [
   {
@@ -22,15 +22,26 @@ describe('buildCatalog', () => {
     expect(mocks.every((t) => t.backendId === 'contact-sheet')).toBe(true)
   })
 
-  it('files the real template under the singular design category', () => {
-    expect(buildCatalog(real)[0]!.category).toBe('Portfolio')
-    expect(categoryFor('Landing pages')).toBe('Landing page')
-    expect(categoryFor(null)).toBe('Brand site')
+  it('keeps the service category names and groups the mocks under plural ones', () => {
+    const catalog = buildCatalog(real)
+    expect(catalog[0]!.category).toBe('Portfolios')
+    expect(categoriesOf(catalog)).toEqual(['Portfolios', 'Landing pages', 'Brand sites'])
+  })
+
+  it('adds a category for each new template of the service', () => {
+    const editorial = {
+      id: 'psychiatrist-editorial',
+      label: 'Editorial',
+      shortLabel: 'Editorial',
+      category: 'Psychiatrists',
+      description: '',
+    }
+    expect(categoriesOf(buildCatalog([...real, editorial]))).toContain('Psychiatrists')
   })
 
   it('counts three portfolios, two landing pages and one brand site', () => {
     const counts: Record<string, number> = {}
     for (const t of buildCatalog(real)) counts[t.category] = (counts[t.category] ?? 0) + 1
-    expect(counts).toEqual({ Portfolio: 3, 'Landing page': 2, 'Brand site': 1 })
+    expect(counts).toEqual({ Portfolios: 3, 'Landing pages': 2, 'Brand sites': 1 })
   })
 })

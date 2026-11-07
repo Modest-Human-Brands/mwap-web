@@ -7,6 +7,7 @@ import AddressCard from '@/components/wizard/AddressCard.vue'
 import SitePreview from '@/components/wizard/SitePreview.vue'
 import SummaryBlock from '@/components/wizard/SummaryBlock.vue'
 import WizardShell from '@/components/wizard/WizardShell.vue'
+import { profileFor } from '@/domain/content'
 import { ACCENTS } from '@/domain/templates'
 import { buildBrand, buildData, siteAddress, templatePages } from '@/domain/wizard'
 import { formatPages } from '@/domain/site'
@@ -19,6 +20,7 @@ if (!store.details) router.replace('/new')
 
 const d = computed(() => store.details)
 const tpl = computed(() => store.backendTemplate)
+const profile = computed(() => profileFor(tpl.value?.id ?? ''))
 const pageCount = computed(() => (tpl.value ? templatePages(tpl.value).length : 0))
 const accentName = computed(
   () =>
@@ -68,8 +70,12 @@ async function publish() {
         :rows="[
           ['Headline', d.headline],
           ['Tagline', d.bio],
-          ['Measurements', d.measurements.map((m) => `${m.label} ${m.value}`).join(' · ')],
-          ['Stats', d.stats.map((s) => `${s.value} ${s.label}`).join(' · ') || 'None'],
+          ['Contact', [d.email, d.phone].filter(Boolean).join(' · ')],
+          [profile.rowsLabel, d.rows.map((m) => `${m.label} ${m.value}`).join(' · ')],
+          [profile.statsLabel, d.stats.map((s) => `${s.value} ${s.label}`).join(' · ') || 'None'],
+          ...(d.googleAnalyticsId
+            ? [['Google Analytics', d.googleAnalyticsId] as [string, string]]
+            : []),
         ]"
       />
     </div>

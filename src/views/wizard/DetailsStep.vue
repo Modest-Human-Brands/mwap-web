@@ -30,6 +30,7 @@ function next() {
   >
     <DetailsForm
       v-if="d"
+      :template-id="tpl?.id ?? ''"
       :details="d"
       :errors="store.errors"
       @name="store.setName"

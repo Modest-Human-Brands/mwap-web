@@ -9,6 +9,7 @@ import BarChart from '@/components/analytics/BarChart.vue'
 import KpiCard from '@/components/analytics/KpiCard.vue'
 import RangeTabs from '@/components/analytics/RangeTabs.vue'
 import RankList from '@/components/analytics/RankList.vue'
+import DeleteSiteDialog from '@/components/sites/DeleteSiteDialog.vue'
 import UiButton from '@/components/ui/UiButton.vue'
 import UiSelect from '@/components/ui/UiSelect.vue'
 import PageRail from '@/components/wizard/PageRail.vue'
@@ -33,6 +34,7 @@ const description = ref('')
 const range = ref<Range>(30)
 const templateLabel = ref('')
 const page = ref<string>()
+const deleting = ref(false)
 
 async function load() {
   site.value = undefined
@@ -180,8 +182,22 @@ function changeStatus() {
           class="px-3 text-sm text-text-2 transition-colors hover:text-white"
           >Open site</a
         >
+        <button
+          type="button"
+          class="cursor-pointer px-3 text-sm text-error transition-colors hover:text-white"
+          @click="deleting = true"
+        >
+          Delete
+        </button>
         <UiButton :to="{ name: 'site-edit', params: { slug: site.slug } }">Edit site</UiButton>
       </div>
     </aside>
+    <DeleteSiteDialog
+      v-if="deleting"
+      :name="site.brand.name"
+      :slug="site.slug"
+      @close="deleting = false"
+      @deleted="(sites.remove(site.slug), router.push('/'))"
+    />
   </div>
 </template>
