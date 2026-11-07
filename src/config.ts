@@ -6,7 +6,7 @@ export interface AppConfig {
   /** Optional wildcard domain (e.g. mwap.site): new sites also get `<slug>.<domain>`. */
   siteDomain: string
   useMocks: boolean
-  /** DEV ONLY: a browser cannot keep a secret. Production needs a proxy or real user auth. */
+  /** Bundled into the build, so anyone can read it: a stopgap for testing. Production needs a proxy or real user auth. */
   apiKey: string
   orgId: string
 }
@@ -23,6 +23,6 @@ export const config: AppConfig = {
   siteDomain: env.VITE_MWAP_SITE_DOMAIN ?? '',
   sitesBaseUrl: env.VITE_MWAP_SITES_URL || (env.DEV ? DEV_SERVICE : PROD_SERVICE),
   useMocks: env.VITE_USE_MOCKS !== 'false',
-  apiKey: env.DEV ? (env.VITE_MWAP_API_KEY ?? '') : '',
+  apiKey: env.VITE_MWAP_API_KEY ?? '',
   orgId: env.VITE_MWAP_ORG_ID || 'default',
 }
