@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.8
+
+[compare changes](https://github.com/Modest-Human-Brands/mwap-web/compare/v0.0.7...v0.0.8)
+
+### 🚀 Enhancements
+
+- Implement runtime configuration for API settings and update caching strategy ([3f02f36](https://github.com/Modest-Human-Brands/mwap-web/commit/3f02f36))
+
+### ❤️ Contributors
+
+- Shirsendu Bairagi ([@shba007](https://github.com/shba007))
+
 ## v0.0.7
 
 [compare changes](https://github.com/Modest-Human-Brands/mwap-web/compare/v0.0.6...v0.0.7)
