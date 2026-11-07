@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.0.7
+
+[compare changes](https://github.com/Modest-Human-Brands/mwap-web/compare/v0.0.6...v0.0.7)
+
+### 🚀 Enhancements
+
+- Add TemplateThumb component and integrate into TemplateStep view ([a5b550d](https://github.com/Modest-Human-Brands/mwap-web/commit/a5b550d))
+
+### 🩹 Fixes
+
+- Update project name and notification tag to MWap Web ([6ba8500](https://github.com/Modest-Human-Brands/mwap-web/commit/6ba8500))
+
+### ❤️ Contributors
+
+- Shirsendu Bairagi ([@shba007](https://github.com/shba007))
+
 ## v0.0.6
 
 [compare changes](https://github.com/Modest-Human-Brands/mwap-web/compare/v0.0.5...v0.0.6)
