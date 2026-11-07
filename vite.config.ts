@@ -140,6 +140,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp}'],
+        // Rewritten on every container start: never cache it
+        globIgnores: ['config.js'],
       },
     }),
   ]),

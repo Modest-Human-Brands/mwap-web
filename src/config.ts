@@ -6,23 +6,45 @@ export interface AppConfig {
   /** Optional wildcard domain (e.g. mwap.site): new sites also get `<slug>.<domain>`. */
   siteDomain: string
   useMocks: boolean
-  /** Bundled into the build, so anyone can read it: a stopgap for testing. Production needs a proxy or real user auth. */
+  /** A browser cannot keep a secret: set at runtime via /config.js, readable by anyone. Stopgap until a proxy or real user auth. */
   apiKey: string
   orgId: string
 }
 
+/** Written to /config.js by docker/runtime-config.sh when the container starts. Empty values are ignored. */
+interface RuntimeConfig {
+  apiBaseUrl?: string
+  sitesBaseUrl?: string
+  siteDomain?: string
+  orgId?: string
+  apiKey?: string
+}
+
+declare global {
+  interface Window {
+    __MWAP_CONFIG__?: RuntimeConfig
+  }
+}
+
 const env = import.meta.env
+const runtime: RuntimeConfig = (typeof window !== 'undefined' && window.__MWAP_CONFIG__) || {}
+/** First non-blank value. */
+const pick = (...values: (string | undefined)[]) => values.find((v) => v?.trim())?.trim() ?? ''
 
 const DEV_SERVICE = 'http://localhost:3001'
 const PROD_SERVICE = 'https://wap.modesthumanbrands.com'
 
 export const config: AppConfig = {
   // The browser calls the service directly (no proxy): local in dev, deployed in production.
-  apiBaseUrl: env.VITE_MWAP_API_URL || (env.DEV ? DEV_SERVICE : PROD_SERVICE),
+  apiBaseUrl: pick(runtime.apiBaseUrl, env.VITE_MWAP_API_URL, env.DEV ? DEV_SERVICE : PROD_SERVICE),
   siteUrl: env.VUE_PUBLIC_SITE_URL ?? '',
-  siteDomain: env.VITE_MWAP_SITE_DOMAIN ?? '',
-  sitesBaseUrl: env.VITE_MWAP_SITES_URL || (env.DEV ? DEV_SERVICE : PROD_SERVICE),
+  siteDomain: pick(runtime.siteDomain, env.VITE_MWAP_SITE_DOMAIN),
+  sitesBaseUrl: pick(
+    runtime.sitesBaseUrl,
+    env.VITE_MWAP_SITES_URL,
+    env.DEV ? DEV_SERVICE : PROD_SERVICE,
+  ),
   useMocks: env.VITE_USE_MOCKS !== 'false',
-  apiKey: env.VITE_MWAP_API_KEY ?? '',
-  orgId: env.VITE_MWAP_ORG_ID || 'default',
+  apiKey: pick(runtime.apiKey, env.VITE_MWAP_API_KEY),
+  orgId: pick(runtime.orgId, env.VITE_MWAP_ORG_ID, 'default'),
 }
