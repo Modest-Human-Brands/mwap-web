@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.6
+
+[compare changes](https://github.com/Modest-Human-Brands/mwap-web/compare/v0.0.5...v0.0.6)
+
+### 🩹 Fixes
+
+- Update apiKey handling and improve comments in config ([1ce9b4f](https://github.com/Modest-Human-Brands/mwap-web/commit/1ce9b4f))
+
+### ❤️ Contributors
+
+- Shirsendu Bairagi ([@shba007](https://github.com/shba007))
+
 ## v0.0.5
 
 [compare changes](https://github.com/Modest-Human-Brands/mwap-web/compare/v0.0.4...v0.0.5)
