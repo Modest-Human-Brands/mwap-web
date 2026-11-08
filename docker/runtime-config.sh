@@ -11,11 +11,11 @@ js_string() {
 
 cat > "$TARGET" <<EOF
 window.__MWAP_CONFIG__ = {
-  apiBaseUrl: "$(js_string "${VITE_MWAP_API_URL:-}")",
-  sitesBaseUrl: "$(js_string "${VITE_MWAP_SITES_URL:-}")",
-  siteDomain: "$(js_string "${VITE_MWAP_SITE_DOMAIN:-}")",
-  orgId: "$(js_string "${VITE_MWAP_ORG_ID:-}")",
-  apiKey: "$(js_string "${VITE_MWAP_API_KEY:-}")",
+  apiBaseUrl: "$(js_string "${VITE_MWAP_WEB_API_URL:-}")",
+  sitesBaseUrl: "$(js_string "${VITE_MWAP_WEB_SITES_URL:-}")",
+  siteDomain: "$(js_string "${VITE_MWAP_WEB_SITE_DOMAIN:-}")",
+  orgId: "$(js_string "${ORGANIZATION_ID:-}")",
+  apiKey: "$(js_string "${VITE_MWAP_WEB_API_KEY:-}")",
 }
 EOF
 

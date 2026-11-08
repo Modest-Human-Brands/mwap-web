@@ -19,7 +19,7 @@ export interface UseGoogleAnalyticsOptions {
  */
 export function useGoogleAnalytics(options: UseGoogleAnalyticsOptions = {}) {
   const measurementId =
-    options.measurementId ?? (import.meta.env.VITE_GA_MEASUREMENT_ID as string | undefined)
+    options.measurementId ?? (import.meta.env.VITE_MWAP_WEB_GA_MEASUREMENT_ID as string | undefined)
   const enableInDev = options.enableInDev ?? false
 
   const shouldLoad = Boolean(measurementId && (!import.meta.env.DEV || enableInDev))

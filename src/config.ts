@@ -36,15 +36,20 @@ const PROD_SERVICE = 'https://wap.modesthumanbrands.com'
 
 export const config: AppConfig = {
   // The browser calls the service directly (no proxy): local in dev, deployed in production.
-  apiBaseUrl: pick(runtime.apiBaseUrl, env.VITE_MWAP_API_URL, env.DEV ? DEV_SERVICE : PROD_SERVICE),
-  siteUrl: env.VUE_PUBLIC_SITE_URL ?? '',
-  siteDomain: pick(runtime.siteDomain, env.VITE_MWAP_SITE_DOMAIN),
-  sitesBaseUrl: pick(
-    runtime.sitesBaseUrl,
-    env.VITE_MWAP_SITES_URL,
+  apiBaseUrl: pick(
+    runtime.apiBaseUrl,
+    env.VITE_MWAP_WEB_API_URL,
     env.DEV ? DEV_SERVICE : PROD_SERVICE,
   ),
-  useMocks: env.VITE_USE_MOCKS !== 'false',
-  apiKey: pick(runtime.apiKey, env.VITE_MWAP_API_KEY),
-  orgId: pick(runtime.orgId, env.VITE_MWAP_ORG_ID, 'default'),
+  siteUrl: env.VITE_MWAP_WEB_SITE_URL ?? '',
+  siteDomain: pick(runtime.siteDomain, env.VITE_MWAP_WEB_SITE_DOMAIN),
+  sitesBaseUrl: pick(
+    runtime.sitesBaseUrl,
+    env.VITE_MWAP_WEB_SITES_URL,
+    env.DEV ? DEV_SERVICE : PROD_SERVICE,
+  ),
+  useMocks:
+    env.VITE_MWAP_WEB_USE_MOCKS !== undefined ? env.VITE_MWAP_WEB_USE_MOCKS !== 'false' : false,
+  apiKey: pick(runtime.apiKey, env.VITE_MWAP_WEB_API_KEY),
+  orgId: pick(runtime.orgId, env.ORGANIZATION_ID),
 }
