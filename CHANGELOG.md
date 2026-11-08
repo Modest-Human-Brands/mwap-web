@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.10
+
+[compare changes](https://github.com/Modest-Human-Brands/mwap-web/compare/v0.0.9...v0.0.10)
+
+### 💅 Refactors
+
+- Remove content interfaces and logic, introduce JSON schema for template data validation ([fd3d8c2](https://github.com/Modest-Human-Brands/mwap-web/commit/fd3d8c2))
+
+### ❤️ Contributors
+
+- Shirsendu Bairagi ([@shba007](https://github.com/shba007))
+
 ## v0.0.9
 
 [compare changes](https://github.com/Modest-Human-Brands/mwap-web/compare/v0.0.8...v0.0.9)

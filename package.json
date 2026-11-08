@@ -1,6 +1,6 @@
 {
   "name": "mwap-web",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "private": true,
   "description": "Web dashboard of MWap: create, publish and manage template-driven sites",
   "license": "MIT",
