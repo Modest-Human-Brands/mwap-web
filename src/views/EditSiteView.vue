@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { ApiError, sitesApi, type Site } from '@/api'
+import { ApiError, sitesApi, templatesApi, type Site, type Template } from '@/api'
 import UiButton from '@/components/ui/UiButton.vue'
 import DetailsForm from '@/components/wizard/DetailsForm.vue'
 import SitePreview from '@/components/wizard/SitePreview.vue'
@@ -10,13 +10,16 @@ import WizardShell from '@/components/wizard/WizardShell.vue'
 import {
   applyDetails,
   detailsFromSite,
+  contentErrorsOf,
   fieldForServiceError,
   siteAddress,
   sitePages,
+  validateContent,
   validateDetails,
   type DetailsErrors,
   type SiteDetails,
 } from '@/domain/wizard'
+import type { JsonSchema } from '@/domain/schema'
 import { useSitesStore } from '@/stores/sites'
 
 const route = useRoute()
@@ -24,6 +27,9 @@ const router = useRouter()
 const slug = String(route.params.slug)
 
 const site = ref<Site>()
+const template = ref<Template>()
+/** Failing content fields, by path. */
+const contentErrors = ref<Record<string, string>>({})
 const details = ref<SiteDetails>()
 const errors = ref<DetailsErrors>({})
 const loadError = ref('')
@@ -34,6 +40,7 @@ const initial = ref('')
 onMounted(async () => {
   try {
     site.value = await sitesApi.get(slug)
+    template.value = await templatesApi.get(site.value.templateId)
     details.value = detailsFromSite(site.value)
     initial.value = JSON.stringify(details.value)
   } catch (e) {
@@ -52,8 +59,9 @@ const back = () => router.push({ name: 'site', params: { slug } })
 
 async function save() {
   if (!site.value || !details.value) return
-  errors.value = validateDetails(details.value, site.value?.templateId ?? '')
-  if (Object.keys(errors.value).length) return
+  errors.value = validateDetails(details.value)
+  contentErrors.value = validateContent(template.value?.schema, details.value)
+  if (Object.keys(errors.value).length || Object.keys(contentErrors.value).length) return
   saving.value = true
   submitError.value = ''
   try {
@@ -68,12 +76,13 @@ async function save() {
         if (field) next[field] = err.message
       }
       errors.value = next
+      contentErrors.value = contentErrorsOf(e.errors)
       submitError.value =
         e.status === 401
           ? 'The service rejected the API key (dev setup: set VITE_MWAP_API_KEY).'
           : e.status === 404
             ? 'This site is read-only or belongs to another organization.'
-            : Object.keys(next).length
+            : Object.keys(next).length || Object.keys(contentErrors.value).length
               ? 'Fix the highlighted fields.'
               : e.message
     } else {
@@ -98,9 +107,10 @@ async function save() {
     <template v-else>
       <p v-if="submitError" role="alert" class="mb-4 text-sm text-error">{{ submitError }}</p>
       <DetailsForm
-        :template-id="site?.templateId ?? ''"
+        :schema="(template?.schema ?? {}) as JsonSchema"
         :details="details"
         :errors="errors"
+        :content-errors="contentErrors"
         slug-locked
         @name="details.name = $event"
         @slug="() => {}"

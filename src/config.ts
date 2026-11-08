@@ -51,5 +51,5 @@ export const config: AppConfig = {
   useMocks:
     env.VITE_MWAP_WEB_USE_MOCKS !== undefined ? env.VITE_MWAP_WEB_USE_MOCKS !== 'false' : false,
   apiKey: pick(runtime.apiKey, env.VITE_MWAP_WEB_API_KEY),
-  orgId: pick(runtime.orgId, env.ORGANIZATION_ID),
+  orgId: pick(runtime.orgId, env.ORGANIZATION_ID, 'default'),
 }

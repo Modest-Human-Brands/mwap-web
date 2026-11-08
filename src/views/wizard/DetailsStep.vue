@@ -6,6 +6,7 @@ import UiButton from '@/components/ui/UiButton.vue'
 import DetailsForm from '@/components/wizard/DetailsForm.vue'
 import SitePreview from '@/components/wizard/SitePreview.vue'
 import WizardShell from '@/components/wizard/WizardShell.vue'
+import type { JsonSchema } from '@/domain/schema'
 import { buildBrand, buildData, siteAddress, templatePages } from '@/domain/wizard'
 import { useWizardStore } from '@/stores/wizard'
 
@@ -30,9 +31,10 @@ function next() {
   >
     <DetailsForm
       v-if="d"
-      :template-id="tpl?.id ?? ''"
+      :schema="(tpl?.schema ?? {}) as JsonSchema"
       :details="d"
       :errors="store.errors"
+      :content-errors="store.contentErrors"
       @name="store.setName"
       @slug="store.setSlug"
       @submit="next"

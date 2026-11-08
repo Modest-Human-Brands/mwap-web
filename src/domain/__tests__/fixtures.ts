@@ -41,13 +41,121 @@ export const site: Site = {
   domains: ['northlight.example.test'],
 }
 
+const uri = { type: 'string', format: 'uri' }
+const text = { type: 'string' }
+const link = {
+  type: 'object',
+  properties: { label: text, href: { type: 'string', pattern: '^(#|\\/|https?:\\/\\/)' } },
+  required: ['label', 'href'],
+}
+
+/** A trimmed contact-sheet schema: enough shapes to exercise the editor. */
+export const contactSchema = {
+  type: 'object',
+  properties: {
+    seo: {
+      type: 'object',
+      properties: { ogImage: uri, keywords: { type: 'array', items: text } },
+      required: ['ogImage'],
+    },
+    navigation: { type: 'array', maxItems: 2, items: link },
+    contact: {
+      type: 'object',
+      properties: { email: { type: 'string', format: 'email' } },
+      required: ['email'],
+    },
+    pages: {
+      type: 'object',
+      properties: {
+        home: {
+          type: 'object',
+          properties: {
+            title: text,
+            cover: {
+              type: 'object',
+              properties: {
+                enabled: { type: 'boolean' },
+                title: { type: 'string', minLength: 1 },
+                tagline: text,
+                imageUrl: uri,
+              },
+              required: ['enabled', 'title', 'tagline'],
+            },
+            compCard: {
+              type: 'object',
+              properties: {
+                enabled: { type: 'boolean' },
+                stats: {
+                  type: 'array',
+                  maxItems: 3,
+                  items: {
+                    type: 'object',
+                    properties: { value: text, label: text },
+                    required: ['value', 'label'],
+                  },
+                },
+                measurements: {
+                  type: 'array',
+                  minItems: 1,
+                  maxItems: 10,
+                  items: {
+                    type: 'object',
+                    properties: { label: text, value: text },
+                    required: ['label', 'value'],
+                  },
+                },
+              },
+              required: ['enabled', 'measurements'],
+            },
+          },
+          required: ['title'],
+        },
+      },
+    },
+  },
+  required: ['seo', 'contact', 'pages'],
+}
+
+export const editorialSchema = {
+  type: 'object',
+  properties: {
+    contact: {
+      type: 'object',
+      properties: { email: { type: 'string', format: 'email' }, phone: text },
+      required: ['email'],
+    },
+    pages: {
+      type: 'object',
+      properties: {
+        home: {
+          type: 'object',
+          properties: {
+            title: text,
+            hero: {
+              type: 'object',
+              properties: {
+                enabled: { type: 'boolean' },
+                titleLines: { type: 'array', minItems: 1, maxItems: 3, items: text },
+                tagline: text,
+              },
+              required: ['enabled', 'titleLines'],
+            },
+          },
+        },
+        about: { type: 'object', properties: { title: text } },
+      },
+    },
+  },
+  required: ['contact', 'pages'],
+}
+
 export const template: Template = {
   id: 'contact-sheet',
   label: 'Contact Sheet',
   shortLabel: 'Contact Sheet',
   category: 'Portfolios',
   description: 'Studio template',
-  schema: {},
+  schema: contactSchema,
   sample: site.data,
 }
 
@@ -57,7 +165,7 @@ export const editorialTemplate: Template = {
   shortLabel: 'Editorial',
   category: 'Psychiatrists',
   description: 'Two-page clinic template',
-  schema: {},
+  schema: editorialSchema,
   sample: {
     seo: { ogImage: 'https://example.com/og.png' },
     contact: { email: 'hello@clinic.example.com', phone: '+91 1' },

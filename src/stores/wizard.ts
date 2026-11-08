@@ -14,13 +14,16 @@ import { buildCatalog, type WizardTemplate } from '@/domain/templates'
 import {
   buildSiteInput,
   defaultsFromTemplate,
+  contentErrorsOf,
   fieldForServiceError,
   slugify,
   templatePages,
+  validateContent,
   validateDetails,
   type DetailsErrors,
   type SiteDetails,
 } from '@/domain/wizard'
+import { siteDescription } from '@/domain/schema'
 import { setSiteMeta } from '@/mock/siteMeta'
 import { useSitesStore } from './sites'
 
@@ -41,6 +44,8 @@ export const useWizardStore = defineStore('wizard', () => {
   const detailsFor = ref('')
   const slugTouched = ref(false)
   const errors = ref<DetailsErrors>({})
+  /** Failing content fields (the generated part of the form), by path. */
+  const contentErrors = ref<Record<string, string>>({})
   const submitError = ref('')
   const publishing = ref(false)
   const published = ref<Site>()
@@ -95,6 +100,7 @@ export const useWizardStore = defineStore('wizard', () => {
         // A different template has different content: start its content from its own sample but
         // keep the name, address and brand the user already typed.
         const { name, slug, logoUrl, accent, fontFamily, googleAnalyticsId } = prev
+        contentErrors.value = {}
         details.value = {
           ...defaultsFromTemplate(tpl),
           name,
@@ -121,9 +127,10 @@ export const useWizardStore = defineStore('wizard', () => {
   }
 
   function validate() {
-    const id = backendTemplate.value?.id
-    errors.value = details.value && id ? validateDetails(details.value, id) : {}
-    return Object.keys(errors.value).length === 0
+    const tpl = backendTemplate.value
+    errors.value = details.value ? validateDetails(details.value) : {}
+    contentErrors.value = details.value && tpl ? validateContent(tpl.schema, details.value) : {}
+    return Object.keys(errors.value).length === 0 && Object.keys(contentErrors.value).length === 0
   }
 
   async function publish() {
@@ -138,7 +145,11 @@ export const useWizardStore = defineStore('wizard', () => {
       if (config.useMocks) {
         setSiteMeta(
           d.slug,
-          { status: 'published', description: d.bio, pages: templatePages(tpl).length },
+          {
+            status: 'published',
+            description: siteDescription(d.data),
+            pages: templatePages(tpl).length,
+          },
           d.name,
         )
       }
@@ -152,12 +163,13 @@ export const useWizardStore = defineStore('wizard', () => {
           if (field) next[field] = err.message
         }
         errors.value = next
+        contentErrors.value = contentErrorsOf(e.errors)
         submitError.value =
           e.status === 409
             ? 'That address is already taken. Choose another one.'
             : e.status === 401
               ? 'The service rejected the API key (dev setup: set VITE_MWAP_API_KEY).'
-              : Object.keys(next).length
+              : Object.keys(next).length || Object.keys(contentErrors.value).length
                 ? 'Fix the highlighted fields.'
                 : e.message
       } else {
@@ -175,6 +187,7 @@ export const useWizardStore = defineStore('wizard', () => {
     detailsFor.value = ''
     slugTouched.value = false
     errors.value = {}
+    contentErrors.value = {}
     submitError.value = ''
     published.value = undefined
   }
@@ -188,6 +201,7 @@ export const useWizardStore = defineStore('wizard', () => {
     dirty,
     details,
     errors,
+    contentErrors,
     submitError,
     publishing,
     published,

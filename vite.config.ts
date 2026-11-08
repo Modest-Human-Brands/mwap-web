@@ -9,6 +9,8 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // ORGANIZATION_ID is not secret (it is sent with every write); expose it to the dev build like the VITE_ ones
+  envPrefix: ['VITE_', 'ORGANIZATION_ID'],
   staged: {
     '*': 'vp check --fix',
   },

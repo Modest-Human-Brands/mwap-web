@@ -1,10 +1,8 @@
 import type { Brand, Site, SiteData, SiteInput, Template } from '@/api'
 import { config } from '@/config'
-import { profileFor, type Content } from './content'
+import { contentPathOf, pageKeys, validateData, type JsonSchema } from './schema'
 
-export type { Row, Stat } from './content'
-
-export interface SiteDetails extends Content {
+export interface SiteDetails {
   name: string
   slug: string
   logoUrl: string
@@ -12,11 +10,15 @@ export interface SiteDetails extends Content {
   fontFamily: string
   /** GA4 measurement id, optional. */
   googleAnalyticsId: string
+  /** The template's `data`: everything the content editor changes. */
+  data: SiteData
 }
 
 export const SLUG_PATTERN = /^[a-z0-9-]+$/
 export const GA_PATTERN = /^G-[A-Z0-9]{4,}$/
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+
+/** A deep copy that also works on Vue reactive objects (`structuredClone` throws on a proxy). */
+const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 
 export const slugify = (value: string) =>
   value
@@ -32,9 +34,6 @@ export function siteAddress(slug: string) {
   const base = (config.sitesBaseUrl || window.location.origin).replace(/^https?:\/\//, '')
   return `${base}/${slug}`
 }
-
-type Rec = Record<string, unknown>
-const rec = (v: unknown): Rec => (v && typeof v === 'object' ? (v as Rec) : {})
 
 /** The service has no brand sample, so new sites start from this neutral one. */
 export const DEFAULT_BRAND: Brand = {
@@ -61,12 +60,12 @@ export function defaultsFromTemplate(template: Template): SiteDetails {
     accent: brand.colors.accent,
     fontFamily: brand.fontFamily,
     googleAnalyticsId: '',
-    ...profileFor(template.id).read(template.sample),
+    data: clone(template.sample),
   }
 }
 
 /** Page keys of the template (home, about…), for the preview rail. */
-export const templatePages = (template: Template) => Object.keys(rec(template.sample.pages))
+export const templatePages = (template: Template) => pageKeys(template.sample)
 
 export function buildBrand(_template: Template, d: SiteDetails): Brand {
   const brand = DEFAULT_BRAND
@@ -81,8 +80,8 @@ export function buildBrand(_template: Template, d: SiteDetails): Brand {
 }
 
 /** The template sample with the form's content laid over it, so the payload is always complete. */
-export function buildData(template: Template, d: SiteDetails): SiteData {
-  return profileFor(template.id).write(template.sample, d)
+export function buildData(_template: Template, d: SiteDetails): SiteData {
+  return d.data
 }
 
 export function buildSiteInput(template: Template, d: SiteDetails): SiteInput {
@@ -98,32 +97,20 @@ export function buildSiteInput(template: Template, d: SiteDetails): SiteInput {
 
 export type DetailsErrors = Partial<Record<keyof SiteDetails, string>>
 
-export function validateDetails(d: SiteDetails, templateId: string): DetailsErrors {
-  const p = profileFor(templateId)
+/** Name, address, brand and analytics: the fields every template shares. */
+export function validateDetails(d: SiteDetails): DetailsErrors {
   const errors: DetailsErrors = {}
   if (!d.name.trim()) errors.name = 'Enter a site name'
   if (!d.slug) errors.slug = 'Enter a site address'
   else if (!SLUG_PATTERN.test(d.slug)) errors.slug = 'Use lowercase letters, numbers and dashes'
   if (d.googleAnalyticsId.trim() && !GA_PATTERN.test(d.googleAnalyticsId.trim()))
     errors.googleAnalyticsId = 'Use a GA4 measurement id like G-ABC123XYZ'
-  if (!p.supported) return errors
-
-  if (!d.headline.trim()) errors.headline = 'Enter a headline'
-  else if (
-    p.headlineMultiline &&
-    d.headline.split('\n').filter((l) => l.trim()).length > p.headlineMaxLines
-  )
-    errors.headline = `Use at most ${p.headlineMaxLines} lines`
-  if (!d.bio.trim()) errors.bio = `Enter a ${p.bioLabel.toLowerCase()}`
-  if (!EMAIL_PATTERN.test(d.email.trim())) errors.email = 'Enter a valid contact email'
-
-  if (d.rows.length < p.rowsMin) errors.rows = `Add at least ${p.rowsMin}`
-  else if (d.rows.some((r) => !r.label.trim() || !r.value.trim())) errors.rows = 'Fill in every row'
-  if (d.stats.length < p.statsMin) errors.stats = `Add at least ${p.statsMin}`
-  else if (d.stats.some((s) => !s.label.trim() || !s.value.trim()))
-    errors.stats = 'Fill in every stat'
   return errors
 }
+
+/** The content fields that fail the template's own schema, by path (`pages.home.cover.title`). */
+export const validateContent = (schema: unknown, d: SiteDetails) =>
+  validateData((schema ?? {}) as JsonSchema, d.data)
 
 /** Maps service field paths (brand.name, slug, domains.0…) to form fields. */
 export function fieldForServiceError(field: string): keyof SiteDetails | undefined {
@@ -133,13 +120,17 @@ export function fieldForServiceError(field: string): keyof SiteDetails | undefin
   if (field === 'brand.fontFamily') return 'fontFamily'
   if (field.startsWith('brand.colors')) return 'accent'
   if (field === 'googleAnalyticsId') return 'googleAnalyticsId'
-  if (field.endsWith('contact.email')) return 'email'
-  if (field.endsWith('contact.phone')) return 'phone'
-  if (field.endsWith('cover.title') || field.includes('hero.titleLines')) return 'headline'
-  if (field.endsWith('cover.tagline') || field.endsWith('hero.tagline')) return 'bio'
-  if (field.includes('compCard.measurements') || field.includes('appointment.hours')) return 'rows'
-  if (field.includes('compCard.stats') || field.includes('statement.stats')) return 'stats'
   return undefined
+}
+
+/** Service errors on the content, keyed like `validateContent`. */
+export function contentErrorsOf(errors: { field: string; message: string }[]) {
+  const out: Record<string, string> = {}
+  for (const e of errors) {
+    const path = contentPathOf(e.field)
+    if (path) out[path] = e.message
+  }
+  return out
 }
 
 /** Form values of an existing site (edit screen). */
@@ -151,11 +142,11 @@ export function detailsFromSite(site: Site): SiteDetails {
     accent: site.brand.colors.accent,
     fontFamily: site.brand.fontFamily,
     googleAnalyticsId: site.googleAnalyticsId ?? '',
-    ...profileFor(site.templateId).read(site.data),
+    data: clone(site.data),
   }
 }
 
-export const sitePages = (site: Site) => Object.keys(rec(site.data.pages))
+export const sitePages = (site: Site) => pageKeys(site.data)
 
 /** Edited fields laid over the stored site: PUT replaces the whole site, so everything else is kept. */
 export function applyDetails(site: Site, d: SiteDetails): SiteInput {
@@ -169,7 +160,7 @@ export function applyDetails(site: Site, d: SiteDetails): SiteInput {
       fontFamily: d.fontFamily,
       colors: { ...site.brand.colors, primary: d.accent, accent: d.accent },
     },
-    data: profileFor(site.templateId).write(site.data, d),
+    data: d.data,
     ...(d.googleAnalyticsId.trim() ? { googleAnalyticsId: d.googleAnalyticsId.trim() } : {}),
     ...(site.domains?.length ? { domains: site.domains } : {}),
   }
