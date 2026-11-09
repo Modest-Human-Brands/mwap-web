@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.11
+
+[compare changes](https://github.com/Modest-Human-Brands/mwap-web/compare/v0.0.10...v0.0.11)
+
+### 🚀 Enhancements
+
+- Enhance brand management and validation in the wizard ([d8d7107](https://github.com/Modest-Human-Brands/mwap-web/commit/d8d7107))
+
+### ❤️ Contributors
+
+- Shirsendu Bairagi ([@shba007](https://github.com/shba007))
+
 ## v0.0.10
 
 [compare changes](https://github.com/Modest-Human-Brands/mwap-web/compare/v0.0.9...v0.0.10)
