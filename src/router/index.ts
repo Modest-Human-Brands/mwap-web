@@ -17,6 +17,12 @@ const router = createRouter({
       component: () => import('@/views/EditSiteView.vue'),
       meta: { bare: true },
     },
+    {
+      path: '/brand',
+      name: 'brand',
+      component: () => import('@/views/BrandView.vue'),
+      meta: { bare: true },
+    },
     { path: '/analytics', name: 'analytics', component: () => import('@/views/AnalyticsView.vue') },
     {
       path: '/new',

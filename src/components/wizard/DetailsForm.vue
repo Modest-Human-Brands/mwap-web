@@ -2,9 +2,7 @@
 import { computed } from 'vue'
 
 import UiField from '@/components/ui/UiField.vue'
-import UiSelect from '@/components/ui/UiSelect.vue'
 import { config } from '@/config'
-import { ACCENTS, FONTS } from '@/domain/templates'
 import SchemaForm from '@/components/wizard/SchemaForm.vue'
 import type { JsonSchema } from '@/domain/schema'
 import type { DetailsErrors, SiteDetails } from '@/domain/wizard'
@@ -19,18 +17,16 @@ const props = defineProps<{
   /** The address of a published site cannot change. */
   slugLocked?: boolean
 }>()
-const emit = defineEmits<{ name: [value: string]; slug: [value: string]; submit: [] }>()
+const emit = defineEmits<{
+  name: [value: string]
+  slug: [value: string]
+  submit: []
+}>()
 
-const accents = computed(() =>
-  (ACCENTS.some((a) => a.value.toLowerCase() === props.details.accent.toLowerCase())
-    ? ACCENTS
-    : [
-        { label: `Template colour ${props.details.accent}`, value: props.details.accent },
-        ...ACCENTS,
-      ]
-  ).map((a) => ({ ...a, swatch: a.value })),
+const brandError = computed(
+  () => props.errors.logoUrl ?? props.errors.fontFamily ?? props.errors.accent,
 )
-const fonts = FONTS.map((f) => ({ value: f, label: f }))
+
 const suffix = computed(() => (config.siteDomain ? `.${config.siteDomain}` : ''))
 
 const input =
@@ -80,35 +76,9 @@ const border = (field: keyof SiteDetails) =>
       </div>
     </fieldset>
 
-    <fieldset class="flex flex-col gap-4">
-      <legend class="mb-1 text-xs text-text-2">Brand</legend>
-      <div class="grid grid-cols-2 gap-3">
-        <UiField label="Logo URL" for="logo" :error="errors.logoUrl" class="col-span-2">
-          <input
-            id="logo"
-            v-model="details.logoUrl"
-            placeholder="https://…"
-            :class="[input, border('logoUrl')]"
-          />
-        </UiField>
-        <UiField label="Accent colour" for="accent" :error="errors.accent">
-          <UiSelect
-            id="accent"
-            v-model="details.accent"
-            :options="accents"
-            :invalid="!!errors.accent"
-          />
-        </UiField>
-        <UiField label="Font" for="font" :error="errors.fontFamily">
-          <UiSelect
-            id="font"
-            v-model="details.fontFamily"
-            :options="fonts"
-            :invalid="!!errors.fontFamily"
-          />
-        </UiField>
-      </div>
-    </fieldset>
+    <p v-if="brandError" role="alert" class="text-xs text-error">
+      {{ brandError }} Fix it under Change branding.
+    </p>
 
     <SchemaForm
       :schema="schema"

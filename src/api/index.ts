@@ -1,5 +1,6 @@
 export { ApiError } from './http'
 export type { FieldError } from './http'
+export { fontsApi } from './fonts'
 export { sitesApi } from './sites'
 export { templatesApi } from './templates'
 export type * from './types'

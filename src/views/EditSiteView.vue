@@ -16,15 +16,18 @@ import {
   sitePages,
   validateContent,
   validateDetails,
+  withOrgBrand,
   type DetailsErrors,
   type SiteDetails,
 } from '@/domain/wizard'
 import type { JsonSchema } from '@/domain/schema'
+import { useBrandStore } from '@/stores/brand'
 import { useSitesStore } from '@/stores/sites'
 
 const route = useRoute()
 const router = useRouter()
 const slug = String(route.params.slug)
+const brandStore = useBrandStore()
 
 const site = ref<Site>()
 const template = ref<Template>()
@@ -79,7 +82,7 @@ async function save() {
       contentErrors.value = contentErrorsOf(e.errors)
       submitError.value =
         e.status === 401
-          ? 'The service rejected the API key (dev setup: set VITE_MWAP_API_KEY).'
+          ? 'The service rejected the API key (dev setup: set VITE_MWAP_WEB_API_KEY).'
           : e.status === 404
             ? 'This site is read-only or belongs to another organization.'
             : Object.keys(next).length || Object.keys(contentErrors.value).length
@@ -116,6 +119,22 @@ async function save() {
         @slug="() => {}"
         @submit="save"
       />
+    </template>
+
+    <template #actions>
+      <button
+        v-if="details"
+        type="button"
+        class="inline-flex h-8 cursor-pointer items-center rounded-full border border-divider px-3 text-xs font-medium text-white transition-colors hover:bg-white/8"
+        @click="details = withOrgBrand(details, brandStore.brand)"
+      >
+        Use organisation brand
+      </button>
+      <RouterLink
+        :to="{ name: 'brand', query: { from: route.fullPath } }"
+        class="inline-flex h-8 cursor-pointer items-center rounded-full border border-divider px-3 text-xs font-medium text-white transition-colors hover:bg-white/8"
+        >Change branding</RouterLink
+      >
     </template>
 
     <template #footer>

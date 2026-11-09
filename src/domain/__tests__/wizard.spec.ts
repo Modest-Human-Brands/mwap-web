@@ -3,6 +3,7 @@ import { reactive } from 'vue'
 
 import {
   applyDetails,
+  buildBrand,
   buildData,
   buildSiteInput,
   contentErrorsOf,
@@ -14,7 +15,9 @@ import {
   templatePages,
   validateContent,
   validateDetails,
+  withOrgBrand,
 } from '../wizard'
+import { emptyBrand } from '../brand'
 import { editorialTemplate, site, template } from './fixtures'
 
 describe('slugify', () => {
@@ -129,7 +132,12 @@ describe('template mapping', () => {
 describe('applyDetails', () => {
   it('lays edits over the stored site and keeps its address, domains and brand', () => {
     const d = detailsFromSite(site)
-    const next = applyDetails(site, { ...d, name: 'New name', accent: '#0EA5E9' })
+    const next = applyDetails(site, {
+      ...d,
+      name: 'New name',
+      primary: '#0EA5E9',
+      accent: '#0EA5E9',
+    })
     expect(next.brand.name).toBe('New name')
     expect(next.brand.colors).toMatchObject({
       primary: '#0EA5E9',
@@ -165,5 +173,31 @@ describe('applyDetails', () => {
       'googleAnalyticsId' in
         applyDetails(site, { ...detailsFromSite(site), googleAnalyticsId: '' }),
     ).toBe(false)
+  })
+})
+describe('organisation brand', () => {
+  const org = {
+    ...emptyBrand(),
+    logoUrl: 'https://cdn.test/o.svg',
+    fontFamily: 'Inter',
+    accent: '#0EA5E9',
+  }
+
+  it('starts a new site from the organisation logo, font and colours', () => {
+    const d = defaultsFromTemplate(template, org)
+    expect(d).toMatchObject({ logoUrl: org.logoUrl, fontFamily: 'Inter', accent: '#0EA5E9' })
+    expect(buildBrand(template, { ...d, name: 'Mine' })).toMatchObject({
+      name: 'Mine',
+      logoUrl: org.logoUrl,
+      faviconUrl: org.logoUrl,
+      fontFamily: 'Inter',
+    })
+  })
+
+  it('replaces only the brand when the organisation brand is applied', () => {
+    const d = { ...defaultsFromTemplate(template), name: 'Mine', slug: 'mine' }
+    const next = withOrgBrand(d, org)
+    expect(next).toMatchObject({ name: 'Mine', slug: 'mine', fontFamily: 'Inter' })
+    expect(next.data).toEqual(d.data)
   })
 })

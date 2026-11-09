@@ -19,6 +19,9 @@ import UiButton from '@/components/ui/UiButton.vue'
       >
         {{ $route.name === 'analytics' ? 'Sites' : 'Analytics' }}
       </RouterLink>
+      <RouterLink to="/brand" class="text-sm text-text-2 transition-colors hover:text-white">
+        Brand
+      </RouterLink>
       <UiButton to="/new">New site</UiButton>
     </nav>
   </header>

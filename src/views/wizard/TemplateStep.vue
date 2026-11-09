@@ -4,14 +4,16 @@ import { useRouter } from 'vue-router'
 import IconCheck from '~icons/lucide/check'
 
 import UiButton from '@/components/ui/UiButton.vue'
-import TemplateThumb from '@/components/wizard/TemplateThumb.vue'
 import SitePreview from '@/components/wizard/SitePreview.vue'
+import TemplateThumb from '@/components/wizard/TemplateThumb.vue'
 import WizardShell from '@/components/wizard/WizardShell.vue'
 import { categoriesOf } from '@/domain/templates'
 import { buildBrand, defaultsFromTemplate, siteAddress, templatePages } from '@/domain/wizard'
+import { useBrandStore } from '@/stores/brand'
 import { useWizardStore } from '@/stores/wizard'
 
 const store = useWizardStore()
+const brandStore = useBrandStore()
 const router = useRouter()
 const filter = ref<string>('All')
 
@@ -36,6 +38,17 @@ const tpl = computed(() => store.backendTemplate)
     title="Start from a template"
     subtitle="Pick one to preview it. You can switch any time before filling details."
   >
+    <p
+      v-if="!brandStore.isSet"
+      class="mb-4 rounded-md border border-divider p-3 text-sm text-text-2"
+    >
+      Set your brand once and every site uses it.
+      <RouterLink
+        :to="{ name: 'brand', query: { from: '/new' } }"
+        class="ml-1 text-electric hover:underline"
+        >Set up branding</RouterLink
+      >
+    </p>
     <p v-if="store.catalogError" role="alert" class="text-sm text-text-2">
       {{ store.catalogError }}
       <button class="ml-2 cursor-pointer underline" @click="store.loadCatalog()">Retry</button>
@@ -73,7 +86,7 @@ const tpl = computed(() => store.backendTemplate)
             :aria-pressed="store.templateId === t.id"
             @click="store.selectTemplate(t.id)"
           >
-            <TemplateThumb :template-id="t.id" :label="t.label" />
+            <TemplateThumb :src="t.thumbnail" />
             <span class="text-sm font-medium">{{ t.label }}</span>
             <span class="text-xs text-text-2">{{ t.category }}</span>
             <span
@@ -100,7 +113,7 @@ const tpl = computed(() => store.backendTemplate)
         :title="`Preview · ${store.template.label}`"
         :address="siteAddress('your-site')"
         :template-id="tpl.id"
-        :brand="buildBrand(tpl, defaultsFromTemplate(tpl))"
+        :brand="buildBrand(tpl, defaultsFromTemplate(tpl, brandStore.brand))"
         :data="{}"
         :pages="templatePages(tpl)"
       />

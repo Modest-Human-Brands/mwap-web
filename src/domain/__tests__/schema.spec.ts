@@ -5,13 +5,16 @@ import {
   blankFor,
   contentPathOf,
   enabledSections,
+  fileNameOf,
   getIn,
   humanize,
   labelFor,
+  sectionSummary,
   setIn,
   singular,
   siteDescription,
   validateData,
+  videoPosterOf,
   widgetFor,
   type JsonSchema,
 } from '../schema'
@@ -121,17 +124,17 @@ describe('validateData', () => {
     const errors = validateData(schema, setIn(data, ['seo'], undefined))
     expect(errors['contact.email']).toMatch(/email/)
     expect(errors['pages.home.cover.imageUrl']).toMatch(/URL/)
-    expect(errors['seo']).toBe('Required')
+    expect(errors['seo']).toBe('SEO is required.')
   })
 
   it('checks the minimum length of a required text', () => {
     const errors = validateData(schema, setIn(site.data, ['pages', 'home', 'cover', 'title'], ''))
-    expect(errors['pages.home.cover.title']).toBe('Required')
+    expect(errors['pages.home.cover.title']).toBe('Title is required.')
   })
 
   it('checks list sizes and every item', () => {
     const none = setIn(site.data, ['pages', 'home', 'compCard', 'measurements'], [])
-    expect(validateData(schema, none)['pages.home.compCard.measurements']).toBe('Add at least 1')
+    expect(validateData(schema, none)['pages.home.compCard.measurements']).toBe('Add at least 1.')
 
     const nav = setIn(
       site.data,
@@ -143,7 +146,7 @@ describe('validateData', () => {
       ],
     )
     const errors = validateData(schema, nav)
-    expect(errors['navigation']).toBe('Use at most 2')
+    expect(errors['navigation']).toBe('Use at most 2.')
     expect(errors['navigation.1.href']).toMatch(/link/)
   })
 
@@ -171,5 +174,62 @@ describe('page helpers', () => {
     expect(siteDescription(site.data)).toBe('')
     expect(siteDescription(setIn(site.data, ['pages', 'home', 'description'], 'Hi'))).toBe('Hi')
     expect(siteDescription(editorialTemplate.sample)).toBe('')
+  })
+})
+describe('media cards', () => {
+  it('names the file a link points at', () => {
+    expect(fileNameOf('https://cdn.test/a/nova-hero.jpg?v=2')).toBe('nova-hero.jpg')
+    expect(fileNameOf('https://www.youtube.com/watch?v=nova-reel-2026')).toBe(
+      'youtube.com/watch?v=nova-reel-2026',
+    )
+    expect(fileNameOf('not a link')).toBe('not a link')
+  })
+
+  it('gives a YouTube link a still image and other links none', () => {
+    expect(videoPosterOf('https://www.youtube.com/watch?v=abcDEF123')).toBe(
+      'https://img.youtube.com/vi/abcDEF123/hqdefault.jpg',
+    )
+    expect(videoPosterOf('https://youtu.be/abcDEF123')).toContain('/abcDEF123/')
+    expect(videoPosterOf('https://cdn.test/reel.mp4')).toBeUndefined()
+  })
+})
+
+describe('sectionSummary', () => {
+  const media: JsonSchema = {
+    type: 'object',
+    properties: {
+      enabled: { type: 'boolean' },
+      cover: { type: 'string', format: 'uri' },
+      title: { type: 'string' },
+      photos: { type: 'array', items: { type: 'string', format: 'uri' } },
+      stats: { type: 'array', items: { type: 'object' } },
+    },
+  }
+  it('counts what a section holds', () => {
+    expect(
+      sectionSummary(media, {
+        cover: 'x',
+        title: 'y',
+        photos: ['a', 'b'],
+        stats: [{}, {}, {}, {}],
+      }),
+    ).toBe('text, 3 images, 4 stats')
+  })
+  it('is empty for a section without fields', () => {
+    expect(
+      sectionSummary({ type: 'object', properties: { enabled: { type: 'boolean' } } }, {}),
+    ).toBe('')
+  })
+})
+
+describe('validation copy', () => {
+  it('says how far over a length limit the text is', () => {
+    const s: JsonSchema = {
+      type: 'object',
+      properties: { label: { type: 'string', maxLength: 24 } },
+    }
+    expect(validateData(s, { label: 'x'.repeat(46) }).label).toBe(
+      'Use 24 characters or fewer. This is 46.',
+    )
   })
 })

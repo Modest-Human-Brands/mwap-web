@@ -50,6 +50,15 @@ export interface TemplateSummary {
   shortLabel: string
   category: string | null
   description: string
+  /** Absolute URL of a static picture of the template (a plain file, no rendering). */
+  thumbnail?: string
+}
+
+/** A font family from the service's font library. */
+export interface FontSummary {
+  family: string
+  /** The family without spaces. */
+  name: string
 }
 
 export interface Template extends TemplateSummary {

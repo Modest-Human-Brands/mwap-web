@@ -18,7 +18,13 @@ const props = withDefaults(
   }>(),
   { showStepper: true, leaveTo: '/' },
 )
-defineSlots<{ default(): unknown; footer(): unknown; preview(): unknown }>()
+defineSlots<{
+  default(): unknown
+  footer(): unknown
+  preview(): unknown
+  /** Buttons in the header, left of Cancel (e.g. Change branding). */
+  actions?(): unknown
+}>()
 
 const route = useRoute()
 const router = useRouter()
@@ -47,13 +53,16 @@ function leave() {
           >
           <span class="text-sm font-medium">MWap</span>
         </RouterLink>
-        <button
-          type="button"
-          class="cursor-pointer text-sm text-text-2 transition-colors hover:text-white"
-          @click="dirty ? (confirming = true) : leave()"
-        >
-          {{ showStepper ? 'Cancel' : 'Close' }}
-        </button>
+        <div class="flex items-center gap-4">
+          <slot name="actions" />
+          <button
+            type="button"
+            class="cursor-pointer text-sm text-text-2 transition-colors hover:text-white"
+            @click="dirty ? (confirming = true) : leave()"
+          >
+            {{ showStepper ? 'Cancel' : 'Close' }}
+          </button>
+        </div>
       </header>
 
       <ol v-if="showStepper" class="mt-8 flex gap-3" aria-label="Steps">

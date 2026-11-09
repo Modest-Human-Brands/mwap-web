@@ -7,6 +7,8 @@ export interface WizardTemplate {
   /** The service's category name ("Portfolios", "Psychiatrists"…). */
   category: string
   backendId: string
+  /** Static picture for the picker card. */
+  thumbnail?: string
 }
 
 export function buildCatalog(real: TemplateSummary[]): WizardTemplate[] {
@@ -15,6 +17,7 @@ export function buildCatalog(real: TemplateSummary[]): WizardTemplate[] {
     label: t.label,
     category: t.category ?? 'Other',
     backendId: t.id,
+    thumbnail: t.thumbnail,
   }))
 }
 
@@ -22,14 +25,3 @@ export function buildCatalog(real: TemplateSummary[]): WizardTemplate[] {
 export const categoriesOf = (catalog: WizardTemplate[]) => [
   ...new Set(catalog.map((t) => t.category)),
 ]
-
-export const ACCENTS = [
-  { label: 'Electric violet', value: '#6C3BFF' },
-  { label: 'Electric blue', value: '#2F6BFF' },
-  { label: 'Sky', value: '#0EA5E9' },
-  { label: 'Signal red', value: '#FB3737' },
-  { label: 'Emerald', value: '#10B981' },
-  { label: 'Amber', value: '#F59E0B' },
-]
-
-export const FONTS = ['Geist', 'Oxanium', 'Inter', 'Space Grotesk', 'Playfair Display']

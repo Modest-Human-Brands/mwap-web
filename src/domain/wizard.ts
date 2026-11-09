@@ -1,11 +1,14 @@
 import type { Brand, Site, SiteData, SiteInput, Template } from '@/api'
 import { config } from '@/config'
+import { emptyBrand, siteBrand, type OrgBrand } from './brand'
 import { contentPathOf, pageKeys, validateData, type JsonSchema } from './schema'
 
 export interface SiteDetails {
   name: string
   slug: string
+  /** Brand the site carries; new sites copy it from the organisation brand. */
   logoUrl: string
+  primary: string
   accent: string
   fontFamily: string
   /** GA4 measurement id, optional. */
@@ -51,12 +54,16 @@ export const DEFAULT_BRAND: Brand = {
 }
 
 /** Details form defaults, read from the template sample (the service's own placeholder content). */
-export function defaultsFromTemplate(template: Template): SiteDetails {
-  const brand = DEFAULT_BRAND
+export function defaultsFromTemplate(
+  template: Template,
+  org: OrgBrand = emptyBrand(),
+): SiteDetails {
+  const brand = siteBrand(org, '')
   return {
-    name: brand.name,
-    slug: slugify(brand.name),
+    name: '',
+    slug: '',
     logoUrl: brand.logoUrl,
+    primary: brand.colors.primary,
     accent: brand.colors.accent,
     fontFamily: brand.fontFamily,
     googleAnalyticsId: '',
@@ -74,8 +81,21 @@ export function buildBrand(_template: Template, d: SiteDetails): Brand {
     // The service rejects an empty name, so the live preview shows a placeholder until one is typed.
     name: d.name.trim() || 'Your site',
     logoUrl: d.logoUrl,
+    faviconUrl: d.logoUrl,
     fontFamily: d.fontFamily,
-    colors: { ...brand.colors, primary: d.accent, accent: d.accent },
+    colors: { ...brand.colors, primary: d.primary, accent: d.accent },
+  }
+}
+
+/** Copies the organisation's logo, colours and font into the form (a new site, or "Use organisation brand"). */
+export function withOrgBrand(d: SiteDetails, org: OrgBrand): SiteDetails {
+  const brand = siteBrand(org, d.name)
+  return {
+    ...d,
+    logoUrl: brand.logoUrl,
+    primary: brand.colors.primary,
+    accent: brand.colors.accent,
+    fontFamily: brand.fontFamily,
   }
 }
 
@@ -119,6 +139,7 @@ export function fieldForServiceError(field: string): keyof SiteDetails | undefin
   if (field === 'brand.logoUrl') return 'logoUrl'
   if (field === 'brand.fontFamily') return 'fontFamily'
   if (field.startsWith('brand.colors')) return 'accent'
+  if (field === 'brand.faviconUrl') return 'logoUrl'
   if (field === 'googleAnalyticsId') return 'googleAnalyticsId'
   return undefined
 }
@@ -139,6 +160,7 @@ export function detailsFromSite(site: Site): SiteDetails {
     name: site.brand.name,
     slug: site.slug,
     logoUrl: site.brand.logoUrl,
+    primary: site.brand.colors.primary,
     accent: site.brand.colors.accent,
     fontFamily: site.brand.fontFamily,
     googleAnalyticsId: site.googleAnalyticsId ?? '',
@@ -158,7 +180,7 @@ export function applyDetails(site: Site, d: SiteDetails): SiteInput {
       name: d.name,
       logoUrl: d.logoUrl,
       fontFamily: d.fontFamily,
-      colors: { ...site.brand.colors, primary: d.accent, accent: d.accent },
+      colors: { ...site.brand.colors, primary: d.primary, accent: d.accent },
     },
     data: d.data,
     ...(d.googleAnalyticsId.trim() ? { googleAnalyticsId: d.googleAnalyticsId.trim() } : {}),

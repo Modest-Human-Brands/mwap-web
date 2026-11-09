@@ -32,22 +32,37 @@ const siteWide = computed(() => props_.value.filter(([k]) => k !== 'pages'))
 const pages = computed(() =>
   Object.entries(asSchema(getIn(props.schema, ['properties', 'pages'])).properties ?? {}),
 )
+/** "/work · 3 sections · 1 hidden" */
+function pageMeta(page: string, pageSchema: JsonSchema) {
+  const sections = Object.entries(pageSchema.properties ?? {}).filter(
+    ([, s]) => s.type === 'object',
+  )
+  const hidden = sections.filter(
+    ([k]) => getIn(props.data, ['pages', page, k, 'enabled']) === false,
+  ).length
+  const count = `${sections.length} section${sections.length === 1 ? '' : 's'}`
+  return [page === 'home' ? '/' : `/${page}`, count, hidden ? `${hidden} hidden` : '']
+    .filter(Boolean)
+    .join(' · ')
+}
 const supported = computed(() => props_.value.length > 0)
 </script>
 
 <template>
   <div v-if="supported" class="flex flex-col gap-6">
     <fieldset v-for="[page, pageSchema] in pages" :key="page" class="flex flex-col gap-3">
-      <legend class="mb-1 text-xs text-text-2">
-        {{
+      <legend class="mb-1 flex items-baseline gap-2">
+        <span class="text-base font-medium">{{
           pages.length > 1 ? `${labelFor(page, pageSchema) || humanize(page)} page` : 'Page content'
-        }}
+        }}</span>
+        <span class="text-xs text-text-2">{{ pageMeta(page, pageSchema) }}</span>
       </legend>
       <SchemaNode
-        v-for="[section, sectionSchema] in Object.entries(pageSchema.properties ?? {}).filter(
+        v-for="([section, sectionSchema], i) in Object.entries(pageSchema.properties ?? {}).filter(
           ([, s]) => s.type === 'object',
         )"
         :key="section"
+        :default-open="i === 0 && page === pages[0]?.[0]"
         :name="section"
         :schema="sectionSchema"
         :value="getIn(data, ['pages', page, section])"
@@ -72,7 +87,7 @@ const supported = computed(() => props_.value.length > 0)
     </fieldset>
 
     <fieldset v-if="siteWide.length" class="flex flex-col gap-3">
-      <legend class="mb-1 text-xs text-text-2">Site-wide</legend>
+      <legend class="mb-1 text-base font-medium">Site-wide</legend>
       <SchemaNode
         v-for="[key, child] in siteWide"
         :key="key"

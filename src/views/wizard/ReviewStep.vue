@@ -8,7 +8,6 @@ import SitePreview from '@/components/wizard/SitePreview.vue'
 import SummaryBlock from '@/components/wizard/SummaryBlock.vue'
 import WizardShell from '@/components/wizard/WizardShell.vue'
 import { enabledSections, labelFor, pageKeys, type JsonSchema } from '@/domain/schema'
-import { ACCENTS } from '@/domain/templates'
 import { buildBrand, buildData, siteAddress, templatePages } from '@/domain/wizard'
 import { formatPages } from '@/domain/site'
 import { useWizardStore } from '@/stores/wizard'
@@ -34,12 +33,6 @@ const pageRows = computed<[string, string][]>(() => {
   ])
 })
 const pageCount = computed(() => (tpl.value ? templatePages(tpl.value).length : 0))
-const accentName = computed(
-  () =>
-    ACCENTS.find((a) => a.value.toLowerCase() === d.value?.accent.toLowerCase())?.label ??
-    d.value?.accent ??
-    '',
-)
 
 async function publish() {
   if (await store.publish()) router.push('/new/published')
@@ -73,7 +66,7 @@ async function publish() {
         title="Brand"
         :rows="[
           ['Logo', d.logoUrl],
-          ['Accent colour', accentName],
+          ['Colours', `${d.primary} · ${d.accent}`],
           ['Font', d.fontFamily],
         ]"
       />

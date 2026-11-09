@@ -18,6 +18,10 @@ if (!store.details) router.replace('/new')
 const d = computed(() => store.details)
 const tpl = computed(() => store.backendTemplate)
 
+const fixCount = computed(
+  () => Object.keys(store.errors).length + Object.keys(store.contentErrors).length,
+)
+
 function next() {
   if (store.validate()) router.push('/new/review')
 }
@@ -40,8 +44,20 @@ function next() {
       @submit="next"
     />
 
+    <template #actions>
+      <RouterLink
+        :to="{ name: 'brand', query: { from: '/new/details' } }"
+        class="inline-flex h-8 cursor-pointer items-center rounded-full border border-divider px-3 text-xs font-medium text-white transition-colors hover:bg-white/8"
+        >Change branding</RouterLink
+      >
+    </template>
+
     <template #footer>
-      <span class="text-xs text-text-2">Draft kept while you edit</span>
+      <span class="text-xs text-text-2">{{
+        fixCount
+          ? `${fixCount} field${fixCount === 1 ? '' : 's'} to fix before you continue`
+          : 'Draft kept while you edit'
+      }}</span>
       <div class="flex items-center gap-3">
         <UiButton variant="ghost" class="border-0" @click="router.push('/new')">Back</UiButton>
         <UiButton @click="next">Review &amp; publish</UiButton>

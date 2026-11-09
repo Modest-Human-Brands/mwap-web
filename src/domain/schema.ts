@@ -164,7 +164,7 @@ export function setIn<T>(data: T, path: Path, value: unknown): T {
 const URI = /^[a-z][a-z0-9+.-]*:\/\/\S+$/i
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
-function leafError(s: JsonSchema, v: unknown): string | undefined {
+function leafError(s: JsonSchema, v: unknown, label = 'This field'): string | undefined {
   if (s.type === 'number' || s.type === 'integer') {
     if (typeof v !== 'number' || Number.isNaN(v)) return 'Enter a number'
     if (s.type === 'integer' && !Number.isInteger(v)) return 'Enter a whole number'
@@ -175,9 +175,11 @@ function leafError(s: JsonSchema, v: unknown): string | undefined {
   if (s.type === 'boolean') return undefined
   const text = typeof v === 'string' ? v : ''
   if (s.minLength !== undefined && text.length < s.minLength)
-    return s.minLength === 1 ? 'Required' : `Use at least ${s.minLength} characters`
+    return s.minLength === 1
+      ? `${label} is required.`
+      : `Use ${s.minLength} characters or more. This is ${text.length}.`
   if (s.maxLength !== undefined && text.length > s.maxLength)
-    return `Use at most ${s.maxLength} characters`
+    return `Use ${s.maxLength} characters or fewer. This is ${text.length}.`
   if (s.format === 'email' && !EMAIL.test(text)) return 'Enter a valid email address'
   if (s.format === 'uri' && !URI.test(text)) return 'Enter a full URL, starting with https://'
   if (s.pattern) {
@@ -208,6 +210,8 @@ export function validateData(
   const fail = (msg: string) => {
     out[pathKey(path)] = msg
   }
+  const last = path[path.length - 1]
+  const label = typeof last === 'string' ? labelFor(last, schema) : 'This item'
   if (schema.type === 'object') {
     const obj =
       data && typeof data === 'object' && !Array.isArray(data)
@@ -218,8 +222,10 @@ export function validateData(
         if (schema.required?.includes(key)) {
           const blank = blankFor(child)
           const err =
-            child.type === 'object' || child.type === 'array' ? undefined : leafError(child, blank)
-          out[pathKey([...path, key])] = err ?? 'Required'
+            child.type === 'object' || child.type === 'array'
+              ? undefined
+              : leafError(child, blank, labelFor(key, child))
+          out[pathKey([...path, key])] = err ?? `${labelFor(key, child)} is required.`
         }
         continue
       }
@@ -228,13 +234,13 @@ export function validateData(
   } else if (schema.type === 'array') {
     const list = Array.isArray(data) ? data : []
     if (schema.minItems !== undefined && list.length < schema.minItems)
-      fail(`Add at least ${schema.minItems}`)
+      fail(`Add at least ${schema.minItems}.`)
     else if (schema.maxItems !== undefined && list.length > schema.maxItems)
-      fail(`Use at most ${schema.maxItems}`)
+      fail(`Use at most ${schema.maxItems}.`)
     const item = asSchema(schema.items)
     list.forEach((v, i) => validateData(item, v, [...path, i], out))
   } else {
-    const err = leafError(schema, data)
+    const err = leafError(schema, data, label)
     if (err) fail(err)
   }
   return out
@@ -274,4 +280,74 @@ export function siteDescription(data: unknown): string {
   const first = pageKeys(data)[0]
   const v = first ? getIn(data, ['pages', first, 'description']) : undefined
   return typeof v === 'string' ? v : ''
+}
+/** The file or page a link points at, for a media card: `https://cdn.test/a/nova-hero.jpg` → `nova-hero.jpg`. */
+export function fileNameOf(url: string): string {
+  try {
+    const u = new URL(url)
+    const last = decodeURIComponent(u.pathname.split('/').filter(Boolean).pop() ?? '')
+    const v = u.searchParams.get('v')
+    if (/(^|\.)youtube\.com$/.test(u.hostname) && v)
+      return `${u.hostname.replace(/^www\./, '')}/watch?v=${v}`
+    return last || u.hostname
+  } catch {
+    return url
+  }
+}
+
+/** A still image for a YouTube link (a static picture, no player); other links have none. */
+export function videoPosterOf(url: string): string | undefined {
+  try {
+    const u = new URL(url)
+    const host = u.hostname.replace(/^www\./, '')
+    const id =
+      host === 'youtu.be'
+        ? u.pathname.slice(1)
+        : /(^|\.)youtube\.com$/.test(host)
+          ? (u.searchParams.get('v') ?? /^\/(?:embed|shorts)\/([\w-]{6,})/.exec(u.pathname)?.[1])
+          : undefined
+    return id && /^[\w-]{6,}$/.test(id)
+      ? `https://img.youtube.com/vi/${id}/hqdefault.jpg`
+      : undefined
+  } catch {
+    return undefined
+  }
+}
+
+/** What a collapsed section holds, e.g. "text, image, 4 stats" or "2 images, 1 video". */
+export function sectionSummary(schema: JsonSchema, value: unknown): string {
+  let text = false
+  let images = 0
+  let videos = 0
+  const lists: string[] = []
+  for (const [key, raw] of Object.entries(schema.properties ?? {})) {
+    if (key === 'enabled') continue
+    const child = asSchema(raw)
+    if (child.type === 'array') {
+      const have = getIn(value, [key])
+      const n = Array.isArray(have) ? have.length : 0
+      const item = asSchema(child.items)
+      const kind = item.type === 'object' ? 'object' : widgetFor(key, item)
+      if (kind === 'image') images += n
+      else if (kind === 'video') videos += n
+      else
+        lists.push(
+          `${n} ${(n === 1 ? singular(labelFor(key, child)) : labelFor(key, child)).toLowerCase()}`,
+        )
+    } else if (child.type !== 'object') {
+      const w = widgetFor(key, child)
+      if (w === 'image') images++
+      else if (w === 'video') videos++
+      else text = true
+    }
+  }
+  const noun = (n: number, one: string) => `${n} ${one}${n === 1 ? '' : 's'}`
+  return [
+    text ? 'text' : '',
+    images ? noun(images, 'image') : '',
+    videos ? noun(videos, 'video') : '',
+    ...lists,
+  ]
+    .filter(Boolean)
+    .join(', ')
 }

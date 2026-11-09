@@ -1,4 +1,4 @@
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { defineStore } from 'pinia'
 
 import {
@@ -14,6 +14,7 @@ import { buildCatalog, type WizardTemplate } from '@/domain/templates'
 import {
   buildSiteInput,
   defaultsFromTemplate,
+  withOrgBrand,
   contentErrorsOf,
   fieldForServiceError,
   slugify,
@@ -25,6 +26,7 @@ import {
 } from '@/domain/wizard'
 import { siteDescription } from '@/domain/schema'
 import { setSiteMeta } from '@/mock/siteMeta'
+import { useBrandStore } from './brand'
 import { useSitesStore } from './sites'
 
 export const STEPS = [
@@ -34,6 +36,7 @@ export const STEPS = [
 ] as const
 
 export const useWizardStore = defineStore('wizard', () => {
+  const brandStore = useBrandStore()
   const catalog = ref<WizardTemplate[]>([])
   const catalogError = ref('')
   const templateId = ref('')
@@ -55,7 +58,7 @@ export const useWizardStore = defineStore('wizard', () => {
     const tpl = backendTemplate.value
     return (
       !!(tpl && details.value) &&
-      JSON.stringify(details.value) !== JSON.stringify(defaultsFromTemplate(tpl))
+      JSON.stringify(details.value) !== JSON.stringify(defaultsFromTemplate(tpl, brandStore.brand))
     )
   })
   const template = computed(() => catalog.value.find((t) => t.id === templateId.value))
@@ -95,17 +98,18 @@ export const useWizardStore = defineStore('wizard', () => {
       const sameLayout = prev && detailsFor.value === tpl.id
       templateId.value = id
       detailsFor.value = tpl.id
-      if (!prev) details.value = defaultsFromTemplate(tpl)
+      if (!prev) details.value = defaultsFromTemplate(tpl, brandStore.brand)
       else if (!sameLayout) {
         // A different template has different content: start its content from its own sample but
         // keep the name, address and brand the user already typed.
-        const { name, slug, logoUrl, accent, fontFamily, googleAnalyticsId } = prev
+        const { name, slug, logoUrl, primary, accent, fontFamily, googleAnalyticsId } = prev
         contentErrors.value = {}
         details.value = {
-          ...defaultsFromTemplate(tpl),
+          ...defaultsFromTemplate(tpl, brandStore.brand),
           name,
           slug,
           logoUrl,
+          primary,
           accent,
           fontFamily,
           googleAnalyticsId,
@@ -113,6 +117,13 @@ export const useWizardStore = defineStore('wizard', () => {
       }
     }
   }
+
+  /** Brand is edited on the Brand screen only: the form always carries the organisation's current one. */
+  function syncBrand() {
+    if (details.value) details.value = withOrgBrand(details.value, brandStore.brand)
+  }
+
+  watch(() => brandStore.brand, syncBrand)
 
   function setName(name: string) {
     if (!details.value) return
@@ -168,7 +179,7 @@ export const useWizardStore = defineStore('wizard', () => {
           e.status === 409
             ? 'That address is already taken. Choose another one.'
             : e.status === 401
-              ? 'The service rejected the API key (dev setup: set VITE_MWAP_API_KEY).'
+              ? 'The service rejected the API key (dev setup: set VITE_MWAP_WEB_API_KEY).'
               : Object.keys(next).length || Object.keys(contentErrors.value).length
                 ? 'Fix the highlighted fields.'
                 : e.message
@@ -207,6 +218,7 @@ export const useWizardStore = defineStore('wizard', () => {
     published,
     loadCatalog,
     selectTemplate,
+    syncBrand,
     setName,
     setSlug,
     validate,
