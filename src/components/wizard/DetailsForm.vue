@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import IconPlus from '~icons/lucide/plus'
+import IconX from '~icons/lucide/x'
 
 import UiField from '@/components/ui/UiField.vue'
 import { config } from '@/config'
 import SchemaForm from '@/components/wizard/SchemaForm.vue'
 import type { JsonSchema } from '@/domain/schema'
-import type { DetailsErrors, SiteDetails } from '@/domain/wizard'
+import { MAX_DOMAINS, siteAddress, type DetailsErrors, type SiteDetails } from '@/domain/wizard'
 
 const props = defineProps<{
   /** The template's `data` schema: the content fields are generated from it. */
@@ -27,6 +29,9 @@ const brandError = computed(
   () => props.errors.logoUrl ?? props.errors.fontFamily ?? props.errors.accent,
 )
 
+const autoAddress = computed(() =>
+  config.siteDomain && props.details.slug ? siteAddress(props.details.slug) : '',
+)
 const suffix = computed(() => (config.siteDomain ? `.${config.siteDomain}` : ''))
 
 const input =
@@ -79,6 +84,46 @@ const border = (field: keyof SiteDetails) =>
     <p v-if="brandError" role="alert" class="text-xs text-error">
       {{ brandError }} Fix it under Change branding.
     </p>
+
+    <fieldset class="flex flex-col gap-3">
+      <legend class="mb-1 text-xs text-text-2">Domains</legend>
+      <p v-if="autoAddress" class="text-xs text-text-2">
+        Always served at <span class="text-white">{{ autoAddress }}</span
+        >.
+      </p>
+      <div v-for="(_, i) in details.domains" :key="i" class="flex items-center gap-2">
+        <input
+          v-model="details.domains[i]"
+          :aria-label="`Domain ${i + 1}`"
+          placeholder="example.com"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          :class="[input, border('domains')]"
+        />
+        <button
+          type="button"
+          class="shrink-0 cursor-pointer rounded p-2 text-text-2 hover:text-white"
+          :aria-label="`Remove domain ${i + 1}`"
+          @click="details.domains.splice(i, 1)"
+        >
+          <IconX class="size-4" />
+        </button>
+      </div>
+      <p v-if="errors.domains" role="alert" class="text-xs text-error">{{ errors.domains }}</p>
+      <button
+        v-if="details.domains.length < MAX_DOMAINS"
+        type="button"
+        class="flex cursor-pointer items-center gap-1.5 self-start text-sm text-vite hover:text-white"
+        @click="details.domains.push('')"
+      >
+        <IconPlus class="size-4" /> Add your own domain
+      </button>
+      <p class="text-xs text-text-2">
+        Use a name such as example.com, without www. Point its DNS at the service so it can serve
+        the site.
+      </p>
+    </fieldset>
 
     <SchemaForm
       :schema="schema"

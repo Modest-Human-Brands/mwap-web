@@ -11,6 +11,8 @@ export interface SiteDetails {
   primary: string
   accent: string
   fontFamily: string
+  /** Own domains the site is also served on (example.com). The `<slug>.<site domain>` address is automatic. */
+  domains: string[]
   /** GA4 measurement id, optional. */
   googleAnalyticsId: string
   /** The template's `data`: everything the content editor changes. */
@@ -19,6 +21,27 @@ export interface SiteDetails {
 
 export const SLUG_PATTERN = /^[a-z0-9-]+$/
 export const GA_PATTERN = /^G-[A-Z0-9]{4,}$/
+/** Lowercase apex hostname, as the service accepts it. */
+export const DOMAIN_PATTERN = /^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/
+export const MAX_DOMAINS = 10
+
+/** The address every site gets from the wildcard domain; it is managed by the app, not typed. */
+const autoDomain = (slug: string) => (config.siteDomain ? `${slug}.${config.siteDomain}` : '')
+
+/** What was typed, tidied up: no blanks, no `https://`, no trailing slash, lowercase. */
+export const cleanDomains = (domains: string[]) => [
+  ...new Set(
+    domains
+      .map((v) =>
+        v
+          .trim()
+          .toLowerCase()
+          .replace(/^https?:\/\//, '')
+          .replace(/\/.*$/, ''),
+      )
+      .filter(Boolean),
+  ),
+]
 
 /** A deep copy that also works on Vue reactive objects (`structuredClone` throws on a proxy). */
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
@@ -66,6 +89,7 @@ export function defaultsFromTemplate(
     primary: brand.colors.primary,
     accent: brand.colors.accent,
     fontFamily: brand.fontFamily,
+    domains: [],
     googleAnalyticsId: '',
     data: clone(template.sample),
   }
@@ -111,8 +135,14 @@ export function buildSiteInput(template: Template, d: SiteDetails): SiteInput {
     brand: buildBrand(template, d),
     data: buildData(template, d),
     ...(d.googleAnalyticsId.trim() ? { googleAnalyticsId: d.googleAnalyticsId.trim() } : {}),
-    ...(config.siteDomain ? { domains: [`${d.slug}.${config.siteDomain}`] } : {}),
+    ...allDomains(d.slug, d.domains),
   }
+}
+
+/** `domains` for a request: the automatic address first, then the site's own domains. */
+function allDomains(slug: string, own: string[]) {
+  const all = [autoDomain(slug), ...cleanDomains(own)].filter(Boolean)
+  return all.length ? { domains: all } : {}
 }
 
 export type DetailsErrors = Partial<Record<keyof SiteDetails, string>>
@@ -123,6 +153,15 @@ export function validateDetails(d: SiteDetails): DetailsErrors {
   if (!d.name.trim()) errors.name = 'Enter a site name'
   if (!d.slug) errors.slug = 'Enter a site address'
   else if (!SLUG_PATTERN.test(d.slug)) errors.slug = 'Use lowercase letters, numbers and dashes'
+  const own = cleanDomains(d.domains)
+  if (own.length > MAX_DOMAINS) errors.domains = `Use at most ${MAX_DOMAINS} domains.`
+  else {
+    const bad = own.find((v) => !DOMAIN_PATTERN.test(v) || v.startsWith('www.'))
+    if (bad)
+      errors.domains = bad.startsWith('www.')
+        ? `Use ${bad.slice(4)} without www: it redirects to the main domain.`
+        : `“${bad}” is not a domain. Use a name such as example.com.`
+  }
   if (d.googleAnalyticsId.trim() && !GA_PATTERN.test(d.googleAnalyticsId.trim()))
     errors.googleAnalyticsId = 'Use a GA4 measurement id like G-ABC123XYZ'
   return errors
@@ -134,7 +173,8 @@ export const validateContent = (schema: unknown, d: SiteDetails) =>
 
 /** Maps service field paths (brand.name, slug, domains.0…) to form fields. */
 export function fieldForServiceError(field: string): keyof SiteDetails | undefined {
-  if (field === 'slug' || field.startsWith('domains')) return 'slug'
+  if (field === 'domains' || field.startsWith('domains.')) return 'domains'
+  if (field === 'slug') return 'slug'
   if (field === 'brand.name') return 'name'
   if (field === 'brand.logoUrl') return 'logoUrl'
   if (field === 'brand.fontFamily') return 'fontFamily'
@@ -163,6 +203,7 @@ export function detailsFromSite(site: Site): SiteDetails {
     primary: site.brand.colors.primary,
     accent: site.brand.colors.accent,
     fontFamily: site.brand.fontFamily,
+    domains: (site.domains ?? []).filter((v) => v !== autoDomain(site.slug)),
     googleAnalyticsId: site.googleAnalyticsId ?? '',
     data: clone(site.data),
   }
@@ -184,6 +225,6 @@ export function applyDetails(site: Site, d: SiteDetails): SiteInput {
     },
     data: d.data,
     ...(d.googleAnalyticsId.trim() ? { googleAnalyticsId: d.googleAnalyticsId.trim() } : {}),
-    ...(site.domains?.length ? { domains: site.domains } : {}),
+    ...allDomains(site.slug, d.domains),
   }
 }

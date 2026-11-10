@@ -8,7 +8,7 @@ import SitePreview from '@/components/wizard/SitePreview.vue'
 import SummaryBlock from '@/components/wizard/SummaryBlock.vue'
 import WizardShell from '@/components/wizard/WizardShell.vue'
 import { enabledSections, labelFor, pageKeys, type JsonSchema } from '@/domain/schema'
-import { buildBrand, buildData, siteAddress, templatePages } from '@/domain/wizard'
+import { buildBrand, buildData, cleanDomains, siteAddress, templatePages } from '@/domain/wizard'
 import { formatPages } from '@/domain/site'
 import { useWizardStore } from '@/stores/wizard'
 
@@ -58,6 +58,9 @@ async function publish() {
         :rows="[
           ['Site name', d.name],
           ['Address', siteAddress(d.slug)],
+          ...(cleanDomains(d.domains).length
+            ? [['Own domains', cleanDomains(d.domains).join(', ')] as [string, string]]
+            : []),
           ['Template', store.template.label],
           ['Pages', formatPages(pageCount)],
         ]"

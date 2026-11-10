@@ -6,6 +6,7 @@ import {
   buildBrand,
   buildData,
   buildSiteInput,
+  cleanDomains,
   contentErrorsOf,
   defaultsFromTemplate,
   detailsFromSite,
@@ -72,7 +73,7 @@ describe('validateContent', () => {
 describe('fieldForServiceError', () => {
   it.each([
     ['slug', 'slug'],
-    ['domains.0', 'slug'],
+    ['domains.0', 'domains'],
     ['brand.name', 'name'],
     ['brand.colors.primary', 'accent'],
     ['googleAnalyticsId', 'googleAnalyticsId'],
@@ -199,5 +200,52 @@ describe('organisation brand', () => {
     const next = withOrgBrand(d, org)
     expect(next).toMatchObject({ name: 'Mine', slug: 'mine', fontFamily: 'Inter' })
     expect(next.data).toEqual(d.data)
+  })
+})
+describe('own domains', () => {
+  const base = () => ({ ...defaultsFromTemplate(template), name: 'N', slug: 'n' })
+
+  it('tidies what was typed', () => {
+    expect(cleanDomains([' HTTPS://Example.com/work ', '', 'example.com', 'b.dev'])).toEqual([
+      'example.com',
+      'b.dev',
+    ])
+  })
+
+  it('accepts an apex domain and rejects www, paths and bare words', () => {
+    expect(
+      validateDetails({ ...base(), domains: ['example.com', 'b.co.uk'] }).domains,
+    ).toBeUndefined()
+    expect(validateDetails({ ...base(), domains: ['www.example.com'] }).domains).toMatch(
+      /without www/,
+    )
+    expect(validateDetails({ ...base(), domains: ['localhost'] }).domains).toMatch(/not a domain/)
+    expect(validateDetails({ ...base(), domains: ['a b.com'] }).domains).toMatch(/not a domain/)
+  })
+
+  it('limits how many there are', () => {
+    const many = Array.from({ length: 11 }, (_, i) => `d${i}.com`)
+    expect(validateDetails({ ...base(), domains: many }).domains).toMatch(/at most 10/)
+  })
+
+  it('sends them with the request, none when there are none', () => {
+    expect(buildSiteInput(template, { ...base(), domains: ['Example.com'] }).domains).toEqual([
+      'example.com',
+    ])
+    expect('domains' in buildSiteInput(template, base())).toBe(false)
+  })
+
+  it('keeps the own domains of an existing site when it is saved', () => {
+    const d = detailsFromSite({ ...site, domains: ['northlight.example.test', 'mine.dev'] })
+    expect(d.domains).toEqual(['northlight.example.test', 'mine.dev'])
+    expect(applyDetails(site, { ...d, domains: ['mine.dev', 'two.dev'] }).domains).toEqual([
+      'mine.dev',
+      'two.dev',
+    ])
+  })
+
+  it('maps service domain errors to the domains field', () => {
+    expect(fieldForServiceError('domains.0')).toBe('domains')
+    expect(fieldForServiceError('slug')).toBe('slug')
   })
 })

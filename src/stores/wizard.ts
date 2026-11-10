@@ -102,7 +102,8 @@ export const useWizardStore = defineStore('wizard', () => {
       else if (!sameLayout) {
         // A different template has different content: start its content from its own sample but
         // keep the name, address and brand the user already typed.
-        const { name, slug, logoUrl, primary, accent, fontFamily, googleAnalyticsId } = prev
+        const { name, slug, logoUrl, primary, accent, fontFamily, domains, googleAnalyticsId } =
+          prev
         contentErrors.value = {}
         details.value = {
           ...defaultsFromTemplate(tpl, brandStore.brand),
@@ -112,6 +113,7 @@ export const useWizardStore = defineStore('wizard', () => {
           primary,
           accent,
           fontFamily,
+          domains,
           googleAnalyticsId,
         }
       }
@@ -173,11 +175,15 @@ export const useWizardStore = defineStore('wizard', () => {
           const field = fieldForServiceError(err.field)
           if (field) next[field] = err.message
         }
+        // The service words a domain conflict as 409 "Domain … is already used by site …".
+        if (e.status === 409 && e.message.startsWith('Domain ')) next.domains = e.message
         errors.value = next
         contentErrors.value = contentErrorsOf(e.errors)
         submitError.value =
           e.status === 409
-            ? 'That address is already taken. Choose another one.'
+            ? next.domains
+              ? 'Fix the domain: another site already uses it.'
+              : 'That address is already taken. Choose another one.'
             : e.status === 401
               ? 'The service rejected the API key (dev setup: set VITE_MWAP_WEB_API_KEY).'
               : Object.keys(next).length || Object.keys(contentErrors.value).length

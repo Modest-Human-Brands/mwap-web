@@ -78,16 +78,19 @@ async function save() {
         const field = fieldForServiceError(err.field)
         if (field) next[field] = err.message
       }
+      if (e.status === 409 && e.message.startsWith('Domain ')) next.domains = e.message
       errors.value = next
       contentErrors.value = contentErrorsOf(e.errors)
       submitError.value =
         e.status === 401
           ? 'The service rejected the API key (dev setup: set VITE_MWAP_WEB_API_KEY).'
-          : e.status === 404
-            ? 'This site is read-only or belongs to another organization.'
-            : Object.keys(next).length || Object.keys(contentErrors.value).length
-              ? 'Fix the highlighted fields.'
-              : e.message
+          : e.status === 409 && next.domains
+            ? 'Fix the domain: another site already uses it.'
+            : e.status === 404
+              ? 'This site is read-only or belongs to another organization.'
+              : Object.keys(next).length || Object.keys(contentErrors.value).length
+                ? 'Fix the highlighted fields.'
+                : e.message
     } else {
       submitError.value = 'Could not reach the MWap service'
     }
