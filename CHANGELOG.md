@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.12
+
+[compare changes](https://github.com/Modest-Human-Brands/mwap-web/compare/v0.0.11...v0.0.12)
+
+### 🚀 Enhancements
+
+- Add support for custom domains in site details and validation ([2e0bdd8](https://github.com/Modest-Human-Brands/mwap-web/commit/2e0bdd8))
+
+### ❤️ Contributors
+
+- Shirsendu Bairagi ([@shba007](https://github.com/shba007))
+
 ## v0.0.11
 
 [compare changes](https://github.com/Modest-Human-Brands/mwap-web/compare/v0.0.10...v0.0.11)
