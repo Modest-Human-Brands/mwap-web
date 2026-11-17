@@ -1,3 +1,5 @@
+import { loadAccess } from '@/domain/access'
+
 export interface AppConfig {
   apiBaseUrl: string
   siteUrl: string
@@ -9,6 +11,8 @@ export interface AppConfig {
   /** A browser cannot keep a secret: set at runtime via /config.js, readable by anyone. Stopgap until a proxy or real user auth. */
   apiKey: string
   orgId: string
+  /** Who is connected; kept for attribution, the service does not read it. */
+  userId: string
 }
 
 /** Written to /config.js by docker/runtime-config.sh when the container starts. Empty values are ignored. */
@@ -34,6 +38,9 @@ const pick = (...values: (string | undefined)[]) => values.find((v) => v?.trim()
 const DEV_SERVICE = 'http://localhost:3001'
 const PROD_SERVICE = 'https://wap.modesthumanbrands.com'
 
+/** Details entered on the Setup screen win over runtime and build configuration. */
+const saved = loadAccess()
+
 export const config: AppConfig = {
   // The browser calls the service directly (no proxy): local in dev, deployed in production.
   apiBaseUrl: pick(
@@ -50,6 +57,7 @@ export const config: AppConfig = {
   ),
   useMocks:
     env.VITE_MWAP_WEB_USE_MOCKS !== undefined ? env.VITE_MWAP_WEB_USE_MOCKS !== 'false' : false,
-  apiKey: pick(runtime.apiKey, env.VITE_MWAP_WEB_API_KEY),
-  orgId: pick(runtime.orgId, env.ORGANIZATION_ID, 'default'),
+  apiKey: pick(saved.apiKey, runtime.apiKey, env.VITE_MWAP_WEB_API_KEY),
+  orgId: pick(saved.organizationId, runtime.orgId, env.ORGANIZATION_ID, 'default'),
+  userId: saved.userId,
 }

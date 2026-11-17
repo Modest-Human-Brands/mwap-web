@@ -25,6 +25,8 @@ export interface RequestOptions {
   body?: unknown
   /** Sends x-api-key and x-org-id (create, replace and delete site). */
   write?: boolean
+  /** Replaces the default headers, e.g. to check a key that has not been saved yet. */
+  headers?: Record<string, string>
   signal?: AbortSignal
 }
 
@@ -40,6 +42,7 @@ export async function request<T>(path: string, opts: RequestOptions = {}): Promi
     headers['x-api-key'] = config.apiKey
     headers['x-org-id'] = config.orgId
   }
+  Object.assign(headers, opts.headers)
 
   const res = await fetch(url, {
     method: opts.method ?? 'GET',

@@ -1,9 +1,18 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
+import { config } from '@/config'
+import { isConnected } from '@/domain/access'
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   scrollBehavior: (to) => (to.hash ? { el: to.hash, behavior: 'smooth' } : { top: 0 }),
   routes: [
+    {
+      path: '/setup',
+      name: 'setup',
+      component: () => import('@/views/SetupView.vue'),
+      meta: { bare: true },
+    },
     { path: '/', name: 'sites', component: () => import('@/views/SitesView.vue') },
     {
       path: '/sites/:slug',
@@ -50,6 +59,12 @@ const router = createRouter({
     },
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],
+})
+
+// Nothing works without a user and an API key: connect first, then come back to where the link pointed.
+router.beforeEach((to) => {
+  if (to.name === 'setup' || isConnected(config)) return true
+  return { name: 'setup', query: { next: to.fullPath } }
 })
 
 export default router
