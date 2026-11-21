@@ -6,17 +6,12 @@ import { ApiError } from '@/api'
 import { verifyAccess } from '@/api/access'
 import UiButton from '@/components/ui/UiButton.vue'
 import UiField from '@/components/ui/UiField.vue'
-import { config } from '@/config'
-import { accessErrors, safeNext, saveAccess, type Access } from '@/domain/access'
+import { accessErrors, loadAccess, safeNext, saveAccess, type Access } from '@/domain/access'
 
 const route = useRoute()
 
-// What is already configured (saved here, runtime or build) is offered as the starting point.
-const form = reactive<Access>({
-  organizationId: config.orgId === 'default' ? '' : config.orgId,
-  userId: config.userId,
-  apiKey: config.apiKey,
-})
+// Only what was saved in this browser is offered back. The runtime and build values are never shown or copied into the form.
+const form = reactive<Access>(loadAccess())
 const submitted = ref(false)
 const busy = ref(false)
 const serverError = ref('')
