@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.14
+
+[compare changes](https://github.com/Modest-Human-Brands/mwap-web/compare/v0.0.13...v0.0.14)
+
+### 💅 Refactors
+
+- Update form initialization to load saved access data ([94dfce5](https://github.com/Modest-Human-Brands/mwap-web/commit/94dfce5))
+
+### ❤️ Contributors
+
+- Shirsendu Bairagi ([@shba007](https://github.com/shba007))
+
 ## v0.0.13
 
 [compare changes](https://github.com/Modest-Human-Brands/mwap-web/compare/v0.0.12...v0.0.13)
