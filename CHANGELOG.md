@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.0.13
+
+[compare changes](https://github.com/Modest-Human-Brands/mwap-web/compare/v0.0.12...v0.0.13)
+
+### 🚀 Enhancements
+
+- Implement access management with user authentication and connection setup ([e0bc977](https://github.com/Modest-Human-Brands/mwap-web/commit/e0bc977))
+- Enhance access management with user identification and permissions validation ([f6ff917](https://github.com/Modest-Human-Brands/mwap-web/commit/f6ff917))
+
+### ❤️ Contributors
+
+- Shirsendu Bairagi ([@shba007](https://github.com/shba007))
+
 ## v0.0.12
 
 [compare changes](https://github.com/Modest-Human-Brands/mwap-web/compare/v0.0.11...v0.0.12)
