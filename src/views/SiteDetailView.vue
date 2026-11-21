@@ -15,6 +15,7 @@ import UiSelect from '@/components/ui/UiSelect.vue'
 import PageRail from '@/components/wizard/PageRail.vue'
 import SitePreview from '@/components/wizard/SitePreview.vue'
 import { config } from '@/config'
+import { NOT_OWNER_MESSAGE, canChange } from '@/domain/access'
 import { pageLabel } from '@/domain/pages'
 import { SITE_STATUSES, STATUS_LABEL, formatPages, siteUrl, type SiteStatus } from '@/domain/site'
 import { siteAddress, sitePages } from '@/domain/wizard'
@@ -63,6 +64,7 @@ async function load() {
 }
 watch(slug, load, { immediate: true })
 
+const mine = computed(() => !site.value || canChange(site.value, config.userId))
 const pages = computed(() => (site.value ? sitePages(site.value) : []))
 const analytics = computed(() => siteAnalytics(slug.value, range.value, pages.value))
 const activity = computed(() =>
@@ -174,7 +176,8 @@ function changeStatus() {
         </section>
       </template>
 
-      <div class="mt-auto flex items-center justify-end gap-3 pt-2">
+      <p v-if="!mine" class="mt-auto text-xs text-text-2">{{ NOT_OWNER_MESSAGE }}</p>
+      <div class="flex items-center justify-end gap-3 pt-2" :class="{ 'mt-auto': mine }">
         <a
           :href="siteUrl(site.slug)"
           target="_blank"
@@ -183,13 +186,16 @@ function changeStatus() {
           >Open site</a
         >
         <button
+          v-if="mine"
           type="button"
           class="cursor-pointer px-3 text-sm text-error transition-colors hover:text-white"
           @click="deleting = true"
         >
           Delete
         </button>
-        <UiButton :to="{ name: 'site-edit', params: { slug: site.slug } }">Edit site</UiButton>
+        <UiButton v-if="mine" :to="{ name: 'site-edit', params: { slug: site.slug } }"
+          >Edit site</UiButton
+        >
       </div>
     </aside>
     <DeleteSiteDialog

@@ -26,7 +26,7 @@ describe('request', () => {
 
   it('sends the key and org headers only on writes', async () => {
     const fn = mockFetch(200, {})
-    await request('/site', { method: 'POST', body: { a: 1 }, write: true })
+    await request('/site', { method: 'POST', body: { a: 1 }, access: true })
     await request('/site')
     const write = fn.mock.calls[0]![1] as RequestInit
     const read = fn.mock.calls[1]![1] as RequestInit

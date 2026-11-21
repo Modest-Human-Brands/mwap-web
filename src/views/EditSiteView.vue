@@ -20,6 +20,8 @@ import {
   type DetailsErrors,
   type SiteDetails,
 } from '@/domain/wizard'
+import { config } from '@/config'
+import { NOT_OWNER_MESSAGE, canChange } from '@/domain/access'
 import type { JsonSchema } from '@/domain/schema'
 import { useBrandStore } from '@/stores/brand'
 import { useSitesStore } from '@/stores/sites'
@@ -43,6 +45,10 @@ const initial = ref('')
 onMounted(async () => {
   try {
     site.value = await sitesApi.get(slug)
+    if (!canChange(site.value, config.userId)) {
+      loadError.value = NOT_OWNER_MESSAGE
+      return
+    }
     template.value = await templatesApi.get(site.value.templateId)
     details.value = detailsFromSite(site.value)
     initial.value = JSON.stringify(details.value)
@@ -88,9 +94,11 @@ async function save() {
             ? 'Fix the domain: another site already uses it.'
             : e.status === 404
               ? 'This site is read-only or belongs to another organization.'
-              : Object.keys(next).length || Object.keys(contentErrors.value).length
-                ? 'Fix the highlighted fields.'
-                : e.message
+              : e.status === 403
+                ? NOT_OWNER_MESSAGE
+                : Object.keys(next).length || Object.keys(contentErrors.value).length
+                  ? 'Fix the highlighted fields.'
+                  : e.message
     } else {
       submitError.value = 'Could not reach the MWap service'
     }

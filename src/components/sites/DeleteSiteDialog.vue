@@ -4,6 +4,7 @@ import { ref } from 'vue'
 import { ApiError, sitesApi } from '@/api'
 import UiButton from '@/components/ui/UiButton.vue'
 import UiDialog from '@/components/ui/UiDialog.vue'
+import { NOT_OWNER_MESSAGE } from '@/domain/access'
 import { clearSiteMeta } from '@/mock/siteMeta'
 
 const props = defineProps<{ name: string; slug: string }>()
@@ -24,9 +25,11 @@ async function confirm() {
           ? 'This site is not stored through the API (the built-in example or a Notion row), so it cannot be deleted here.'
           : e.status === 401
             ? 'The service rejected the API key (dev setup: set VITE_MWAP_API_KEY).'
-            : e.status === 404
-              ? 'The service could not find this site, or does not support deleting yet.'
-              : e.message
+            : e.status === 403
+              ? NOT_OWNER_MESSAGE
+              : e.status === 404
+                ? 'The service could not find this site, or does not support deleting yet.'
+                : e.message
         : 'Could not reach the MWap service'
     deleting.value = false
     return

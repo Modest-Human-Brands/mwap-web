@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vite-plus/test'
 import {
   ACCESS_KEY,
   accessErrors,
+  canChange,
   clearAccess,
   emptyAccess,
   isConnected,
@@ -105,5 +106,18 @@ describe('safeNext', () => {
     expect(safeNext('https://evil.test')).toBe('/')
     expect(safeNext('/setup?next=/')).toBe('/')
     expect(safeNext(undefined)).toBe('/')
+  })
+})
+describe('canChange', () => {
+  it('lets the creator change a site', () => {
+    expect(canChange({ createdBy: 'ann' }, 'ann')).toBe(true)
+  })
+
+  it('keeps another user of the organization out', () => {
+    expect(canChange({ createdBy: 'ann' }, 'bob')).toBe(false)
+  })
+
+  it('leaves a site saved before owners were recorded open to its organization', () => {
+    expect(canChange({}, 'bob')).toBe(true)
   })
 })

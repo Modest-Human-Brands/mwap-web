@@ -28,6 +28,9 @@ export interface Site {
   domains?: string[]
   /** GA4 measurement id (G-XXXX); the site reports only to its own property. */
   googleAnalyticsId?: string
+  /** Who created and last changed the site (x-user-id); only the creator may edit or delete it. */
+  createdBy?: string
+  updatedBy?: string
   updatedAt?: string
 }
 

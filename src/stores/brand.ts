@@ -4,6 +4,7 @@ import { useStorage } from '@vueuse/core'
 
 import { sitesApi } from '@/api'
 import { config } from '@/config'
+import { isConnected } from '@/domain/access'
 import {
   brandFromSite,
   emptyBrand,
@@ -44,7 +45,8 @@ export const useBrandStore = defineStore('brand', () => {
 
   /** Carries the brand of the most recently updated site over, once. A failure leaves it to try again next time. */
   async function migrate() {
-    if (saved.value || seeded.value || migrating.value) return
+    // The list is the organisation's own: it needs the connection details first.
+    if (saved.value || seeded.value || migrating.value || !isConnected(config)) return
     migrating.value = true
     try {
       const { results } = await sitesApi.list({ org: config.orgId, limit: 100 })

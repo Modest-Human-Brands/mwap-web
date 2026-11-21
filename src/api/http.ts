@@ -23,8 +23,8 @@ export interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
   query?: Record<string, string | number | undefined>
   body?: unknown
-  /** Sends x-api-key and x-org-id (create, replace and delete site). */
-  write?: boolean
+  /** Sends x-api-key, x-org-id and x-user-id: every site call but a preview needs them. */
+  access?: boolean
   /** Replaces the default headers, e.g. to check a key that has not been saved yet. */
   headers?: Record<string, string>
   signal?: AbortSignal
@@ -38,9 +38,10 @@ export async function request<T>(path: string, opts: RequestOptions = {}): Promi
 
   const headers: Record<string, string> = { Accept: 'application/json' }
   if (opts.body !== undefined) headers['Content-Type'] = 'application/json'
-  if (opts.write) {
+  if (opts.access) {
     headers['x-api-key'] = config.apiKey
     headers['x-org-id'] = config.orgId
+    if (config.userId) headers['x-user-id'] = config.userId
   }
   Object.assign(headers, opts.headers)
 

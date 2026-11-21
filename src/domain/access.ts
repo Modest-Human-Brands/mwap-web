@@ -78,6 +78,14 @@ export function accessErrors(access: Access): AccessErrors {
 export const isConnected = (access: { userId?: string; apiKey?: string }) =>
   Boolean(access.userId?.trim() && access.apiKey?.trim())
 
+/** Shown wherever the service refuses a change because the site was created by someone else (403). */
+export const NOT_OWNER_MESSAGE =
+  'This site was created by another user of your organization, so only they can edit or delete it.'
+
+/** Only the user who created a site may change it; a site saved before owners were recorded is open to its organization. */
+export const canChange = (site: { createdBy?: string }, userId: string) =>
+  !site.createdBy || site.createdBy === userId
+
 /** Only same-app paths are allowed as a return target after connecting. */
 export function safeNext(value: unknown): string {
   return typeof value === 'string' && /^\/(?!\/)/.test(value) && !value.startsWith('/setup')
